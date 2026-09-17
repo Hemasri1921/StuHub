@@ -484,6 +484,50 @@ class StuHubCompleteTestCase(unittest.TestCase):
         self.assertEqual(login_res.status_code, 200)
         self.assertIn(b'Student Dashboard', login_res.data)
 
+    def test_23_demo_student_exempt_from_email_verification(self):
+        """Verify demo student account can log in without email verification requirement, while normal students cannot."""
+        # Force demo student to have email_verified = 0
+        with app.app_context():
+            db = get_db()
+            db.cursor().execute("UPDATE users SET email_verified = 0 WHERE email = 'rahul@stuhub.edu'")
+            db.commit()
+
+        # Demo student login succeeds directly
+        self.client.get('/logout')
+        demo_login = self.client.post('/login', data={
+            'identifier': 'rahul@stuhub.edu',
+            'password': 'student123'
+        }, follow_redirects=True)
+        self.assertEqual(demo_login.status_code, 200)
+        self.assertIn(b'Welcome back, Rahul Sharma!', demo_login.data)
+        self.assertIn(b'Student Dashboard', demo_login.data)
+
+        # Database is automatically updated to verified=1
+        with app.app_context():
+            db = get_db()
+            cur = db.cursor()
+            cur.execute("SELECT email_verified FROM users WHERE email = 'rahul@stuhub.edu'")
+            self.assertEqual(cur.fetchone()['email_verified'], 1)
+
+        # Regular unverified student is still blocked
+        unverified_regular = f"regular_{int(time.time())}@stuhub.edu"
+        with app.app_context():
+            db = get_db()
+            db.cursor().execute('''
+                INSERT INTO users (name, email, password_hash, role, email_verified)
+                VALUES ('Regular Unverified', ?, ?, 'student', 0)
+            ''', (unverified_regular, generate_password_hash('password123')))
+            db.commit()
+
+        self.client.get('/logout')
+        regular_login = self.client.post('/login', data={
+            'identifier': unverified_regular,
+            'password': 'password123'
+        }, follow_redirects=True)
+        self.assertEqual(regular_login.status_code, 200)
+        self.assertIn(b'Please verify your college email before logging in', regular_login.data)
+
 if __name__ == '__main__':
     unittest.main()
+
 

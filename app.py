@@ -449,16 +449,16 @@ def seed_demo_data():
         # Create default Admin
         admin_pass = generate_password_hash(os.environ.get('ADMIN_INITIAL_PASSWORD', 'admin123'))
         cursor.execute('''
-            INSERT INTO users (name, roll_number, branch, year, email, phone, password_hash, role, profile_pic)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO users (name, roll_number, branch, year, email, phone, password_hash, role, profile_pic, email_verified)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
         ''', ('Campus Administrator', 'ADMIN01', 'Administration', 'Staff', 'admin@stuhub.edu', '9876500000', admin_pass, 'admin', 'default_avatar.png'))
         admin_id = cursor.lastrowid
 
         # Create demo Student
         student_pass = generate_password_hash(os.environ.get('STUDENT_INITIAL_PASSWORD', 'student123'))
         cursor.execute('''
-            INSERT INTO users (name, roll_number, branch, year, email, phone, password_hash, role, profile_pic)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO users (name, roll_number, branch, year, email, phone, password_hash, role, profile_pic, email_verified)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
         ''', ('Rahul Sharma', '22CSE045', 'Computer Science & Engineering', '3rd Year', 'rahul@stuhub.edu', '9876543210', student_pass, 'student', 'default_avatar.png'))
         student_id = cursor.lastrowid
 
@@ -538,16 +538,20 @@ def seed_demo_data():
 
         db.commit()
     else:
-        # Update existing demo accounts with roll, branch, year if null
+        # Update existing demo accounts with roll, branch, year and verified status
         cursor.execute('''
-            UPDATE users SET roll_number = '22CSE045', branch = 'Computer Science & Engineering', year = '3rd Year'
-            WHERE email = 'rahul@stuhub.edu' AND (roll_number IS NULL OR roll_number = '')
+            UPDATE users SET roll_number = '22CSE045', branch = 'Computer Science & Engineering', year = '3rd Year', email_verified = 1
+            WHERE email = 'rahul@stuhub.edu'
         ''')
         cursor.execute('''
-            UPDATE users SET roll_number = 'ADMIN01', branch = 'Administration', year = 'Staff'
-            WHERE email = 'admin@stuhub.edu' AND (roll_number IS NULL OR roll_number = '')
+            UPDATE users SET roll_number = 'ADMIN01', branch = 'Administration', year = 'Staff', email_verified = 1
+            WHERE email = 'admin@stuhub.edu'
         ''')
         db.commit()
+
+    # Ensure existing demo accounts always have email_verified enabled
+    cursor.execute("UPDATE users SET email_verified = 1 WHERE email IN ('rahul@stuhub.edu', 'admin@stuhub.edu')")
+    db.commit()
 
     # Update any legacy events to use Non-Technical main_category
     cursor.execute("UPDATE events SET main_category = 'Non-Technical' WHERE main_category = 'Student Activities'")
@@ -1215,7 +1219,17 @@ def login():
                 return redirect(url_for('admin'))
 
             # Check if college email is verified for student
-            if user['email_verified'] == 0:
+            # The existing demo student account is explicitly exempt from the email verification requirement
+            demo_student_email = os.environ.get('DEMO_STUDENT_EMAIL', 'rahul@stuhub.edu').strip().lower()
+            is_demo_student = (user['email'].strip().lower() == demo_student_email)
+
+            if is_demo_student:
+                # Ensure demo student is permanently marked verified in database
+                if user['email_verified'] == 0:
+                    cursor.execute("UPDATE users SET email_verified = 1 WHERE id = ?", (user['id'],))
+                    db.commit()
+            elif user['email_verified'] == 0:
+                # Normal student registration retains strict email verification
                 flash('Please verify your college email before logging in.', 'warning')
                 return render_template('login.html', unverified_email=user['email'], active_tab='student')
 
