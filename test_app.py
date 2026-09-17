@@ -492,7 +492,7 @@ class StuHubCompleteTestCase(unittest.TestCase):
             db.cursor().execute("UPDATE users SET email_verified = 0 WHERE email = 'rahul@stuhub.edu'")
             db.commit()
 
-        # Demo student login succeeds directly
+        # 1. Demo student login succeeds directly with exact email
         self.client.get('/logout')
         demo_login = self.client.post('/login', data={
             'identifier': 'rahul@stuhub.edu',
@@ -509,7 +509,43 @@ class StuHubCompleteTestCase(unittest.TestCase):
             cur.execute("SELECT email_verified FROM users WHERE email = 'rahul@stuhub.edu'")
             self.assertEqual(cur.fetchone()['email_verified'], 1)
 
-        # Regular unverified student is still blocked
+        # 2. Case-insensitive login (e.g. mobile auto-capitalization: 'Rahul@stuhub.edu')
+        self.client.get('/logout')
+        case_login = self.client.post('/login', data={
+            'identifier': 'Rahul@stuhub.edu',
+            'password': 'student123'
+        }, follow_redirects=True)
+        self.assertEqual(case_login.status_code, 200)
+        self.assertIn(b'Welcome back, Rahul Sharma!', case_login.data)
+
+        # 3. Roll number login ('22CSE045')
+        self.client.get('/logout')
+        roll_login = self.client.post('/login', data={
+            'identifier': '22CSE045',
+            'password': 'student123'
+        }, follow_redirects=True)
+        self.assertEqual(roll_login.status_code, 200)
+        self.assertIn(b'Welcome back, Rahul Sharma!', roll_login.data)
+
+        # 4. Short username login ('rahul')
+        self.client.get('/logout')
+        user_login = self.client.post('/login', data={
+            'identifier': 'rahul',
+            'password': 'student123'
+        }, follow_redirects=True)
+        self.assertEqual(user_login.status_code, 200)
+        self.assertIn(b'Welcome back, Rahul Sharma!', user_login.data)
+
+        # 5. Bad password must still be rejected (password security preserved)
+        self.client.get('/logout')
+        bad_pass = self.client.post('/login', data={
+            'identifier': 'rahul@stuhub.edu',
+            'password': 'wrongpassword'
+        }, follow_redirects=True)
+        self.assertEqual(bad_pass.status_code, 200)
+        self.assertIn(b'Invalid college email or password', bad_pass.data)
+
+        # 6. Regular unverified student is still blocked
         unverified_regular = f"regular_{int(time.time())}@stuhub.edu"
         with app.app_context():
             db = get_db()

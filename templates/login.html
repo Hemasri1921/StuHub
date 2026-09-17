@@ -99,14 +99,14 @@
     <!-- Demo Credentials Helper -->
     <div class="demo-credentials-box" style="margin-top: 1.5rem; padding: 0.85rem; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px;">
       <h5 style="margin: 0 0 0.5rem 0; font-size: 0.82rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">
-        ⚡ Quick Demo Credentials (Click to switch &amp; fill):
+        ⚡ Instant Demo Access (1-Click Login):
       </h5>
       <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-        <button type="button" class="pill-btn" onclick="fillQuickCredentials('student', 'rahul@stuhub.edu', 'student123')">
-          🎓 Rahul (Student)
+        <button type="button" class="pill-btn" style="cursor: pointer;" onclick="fillQuickCredentials('student', 'rahul@stuhub.edu', 'student123', true)">
+          🎓 1-Click Demo Student (Rahul)
         </button>
-        <button type="button" class="pill-btn" onclick="fillQuickCredentials('admin', 'admin@stuhub.edu', 'admin123')">
-          🛡️ Campus Admin (Admin)
+        <button type="button" class="pill-btn" style="cursor: pointer;" onclick="fillQuickCredentials('admin', 'admin@stuhub.edu', 'admin123', true)">
+          🛡️ 1-Click Admin Login
         </button>
       </div>
     </div>
@@ -155,10 +155,13 @@ function switchLoginMode(mode) {
   }
 }
 
-function fillQuickCredentials(mode, identifier, password) {
+function fillQuickCredentials(mode, identifier, password, autoSubmit) {
   switchLoginMode(mode);
   document.getElementById('identifier').value = identifier;
   document.getElementById('password').value = password;
+  if (autoSubmit) {
+    document.getElementById('portalLoginForm').submit();
+  }
 }
 </script>
 {% endblock %}

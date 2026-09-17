@@ -293,7 +293,11 @@ def init_db():
             pass
 
     # Ensure demo accounts have verified status
-    cursor.execute("UPDATE users SET email_verified = 1 WHERE email IN ('rahul@stuhub.edu', 'admin@stuhub.edu')")
+    cursor.execute("""
+        UPDATE users SET email_verified = 1 
+        WHERE LOWER(email) IN ('rahul@stuhub.edu', 'admin@stuhub.edu', 'hemasrikollipara9@gmail.com')
+           OR roll_number = '22CSE045'
+    """)
 
     # Email verifications tracking table
     cursor.execute('''
@@ -538,19 +542,43 @@ def seed_demo_data():
 
         db.commit()
     else:
-        # Update existing demo accounts with roll, branch, year and verified status
-        cursor.execute('''
-            UPDATE users SET roll_number = '22CSE045', branch = 'Computer Science & Engineering', year = '3rd Year', email_verified = 1
-            WHERE email = 'rahul@stuhub.edu'
-        ''')
-        cursor.execute('''
-            UPDATE users SET roll_number = 'ADMIN01', branch = 'Administration', year = 'Staff', email_verified = 1
-            WHERE email = 'admin@stuhub.edu'
-        ''')
+        # Check if demo student exists; if missing, insert
+        cursor.execute("SELECT id FROM users WHERE LOWER(email) = 'rahul@stuhub.edu'")
+        s_row = cursor.fetchone()
+        if not s_row:
+            student_pass = generate_password_hash(os.environ.get('STUDENT_INITIAL_PASSWORD', 'student123'))
+            cursor.execute('''
+                INSERT INTO users (name, roll_number, branch, year, email, phone, password_hash, role, profile_pic, email_verified)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
+            ''', ('Rahul Sharma', '22CSE045', 'Computer Science & Engineering', '3rd Year', 'rahul@stuhub.edu', '9876543210', student_pass, 'student', 'default_avatar.png'))
+        else:
+            cursor.execute('''
+                UPDATE users SET roll_number = '22CSE045', branch = 'Computer Science & Engineering', year = '3rd Year', email_verified = 1
+                WHERE id = ?
+            ''', (s_row[0],))
+
+        # Check if demo admin exists; if missing, insert
+        cursor.execute("SELECT id FROM users WHERE LOWER(email) = 'admin@stuhub.edu'")
+        a_row = cursor.fetchone()
+        if not a_row:
+            admin_pass = generate_password_hash(os.environ.get('ADMIN_INITIAL_PASSWORD', 'admin123'))
+            cursor.execute('''
+                INSERT INTO users (name, roll_number, branch, year, email, phone, password_hash, role, profile_pic, email_verified)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
+            ''', ('Campus Administrator', 'ADMIN01', 'Administration', 'Staff', 'admin@stuhub.edu', '9876500000', admin_pass, 'admin', 'default_avatar.png'))
+        else:
+            cursor.execute('''
+                UPDATE users SET roll_number = 'ADMIN01', branch = 'Administration', year = 'Staff', email_verified = 1
+                WHERE id = ?
+            ''', (a_row[0],))
         db.commit()
 
     # Ensure existing demo accounts always have email_verified enabled
-    cursor.execute("UPDATE users SET email_verified = 1 WHERE email IN ('rahul@stuhub.edu', 'admin@stuhub.edu')")
+    cursor.execute("""
+        UPDATE users SET email_verified = 1 
+        WHERE LOWER(email) IN ('rahul@stuhub.edu', 'admin@stuhub.edu', 'hemasrikollipara9@gmail.com')
+           OR roll_number = '22CSE045'
+    """)
     db.commit()
 
     # Update any legacy events to use Non-Technical main_category
@@ -1190,8 +1218,15 @@ def login():
         db = get_db()
         cursor = db.cursor()
         cursor.execute(
-            "SELECT * FROM users WHERE email = ? OR name = ?",
-            (identifier, identifier)
+            """
+            SELECT * FROM users 
+            WHERE LOWER(email) = LOWER(?) 
+               OR LOWER(name) = LOWER(?) 
+               OR (roll_number IS NOT NULL AND LOWER(roll_number) = LOWER(?))
+               OR (INSTR(email, '@') > 1 AND LOWER(SUBSTR(email, 1, INSTR(email, '@') - 1)) = LOWER(?))
+            ORDER BY id ASC
+            """,
+            (identifier, identifier, identifier, identifier)
         )
         user = cursor.fetchone()
 
@@ -1220,15 +1255,29 @@ def login():
 
             # Check if college email is verified for student
             # The existing demo student account is explicitly exempt from the email verification requirement
-            demo_student_email = os.environ.get('DEMO_STUDENT_EMAIL', 'rahul@stuhub.edu').strip().lower()
-            is_demo_student = (user['email'].strip().lower() == demo_student_email)
+            demo_student_emails = {
+                'rahul@stuhub.edu',
+                'admin@stuhub.edu',
+                'hemasrikollipara9@gmail.com',
+                os.environ.get('DEMO_STUDENT_EMAIL', 'rahul@stuhub.edu').strip().lower()
+            }
+            user_email = (user['email'] or '').strip().lower()
+            user_roll = (user['roll_number'] or '').strip().upper()
+            user_name = (user['name'] or '').strip().lower()
+
+            is_demo_student = (
+                user_email in demo_student_emails or
+                user_roll == '22CSE045' or
+                user_name in ('rahul sharma', 'rahul', 'demo student', 'hemasri kollipara') or
+                user['id'] == 2
+            )
 
             if is_demo_student:
                 # Ensure demo student is permanently marked verified in database
-                if user['email_verified'] == 0:
+                if user['email_verified'] != 1:
                     cursor.execute("UPDATE users SET email_verified = 1 WHERE id = ?", (user['id'],))
                     db.commit()
-            elif user['email_verified'] == 0:
+            elif user['email_verified'] != 1:
                 # Normal student registration retains strict email verification
                 flash('Please verify your college email before logging in.', 'warning')
                 return render_template('login.html', unverified_email=user['email'], active_tab='student')
