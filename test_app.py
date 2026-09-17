@@ -441,5 +441,49 @@ class StuHubCompleteTestCase(unittest.TestCase):
         student_blocked = self.client.get('/admin/events/1/registrations')
         self.assertEqual(student_blocked.status_code, 302)
 
+    def test_22_demo_mode_email_verification(self):
+        """Verify safe demo mode verification flow without SMTP credentials."""
+        demo_email = f"demo_student_{int(time.time())}@stuhub.edu"
+        
+        # 1. Request code for valid college email
+        res = self.client.post('/api/send-verification-code', json={'email': demo_email})
+        self.assertEqual(res.status_code, 200)
+        json_data = res.get_json()
+        self.assertTrue(json_data['success'])
+        self.assertTrue(json_data.get('demo_mode'))
+        self.assertIn('dev_code', json_data)
+
+        # 2. Universal fallback '123456' succeeds in demo mode
+        fallback_res = self.client.post('/api/verify-code', json={'email': demo_email, 'code': '123456'})
+        self.assertEqual(fallback_res.status_code, 200)
+        self.assertTrue(fallback_res.get_json()['success'])
+
+        # 3. Dedicated /verify-email endpoint also accepts '123456'
+        unverified_email = f"unverified_demo_{int(time.time())}@stuhub.edu"
+        with app.app_context():
+            db = get_db()
+            db.cursor().execute('''
+                INSERT INTO users (name, email, password_hash, role, email_verified)
+                VALUES ('Unverified Demo', ?, ?, 'student', 0)
+            ''', (unverified_email, generate_password_hash('demopass123')))
+            db.commit()
+
+        post_ver = self.client.post('/verify-email', data={
+            'action': 'verify',
+            'email': unverified_email,
+            'code': '123456'
+        }, follow_redirects=True)
+        self.assertEqual(post_ver.status_code, 200)
+        self.assertIn(b'College Email Verified Successfully', post_ver.data)
+
+        # 4. Now student can log in
+        login_res = self.client.post('/login', data={
+            'identifier': unverified_email,
+            'password': 'demopass123'
+        }, follow_redirects=True)
+        self.assertEqual(login_res.status_code, 200)
+        self.assertIn(b'Student Dashboard', login_res.data)
+
 if __name__ == '__main__':
     unittest.main()
+

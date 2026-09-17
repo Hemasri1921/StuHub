@@ -1,4 +1,4 @@
-﻿{% extends "base.html" %}
+{% extends "base.html" %}
 
 {% block title %}StuHub – Verify College Email{% endblock %}
 
@@ -36,6 +36,22 @@
       </div>
     </form>
 
+    {% if not has_smtp %}
+    <div style="background: #eff6ff; border: 1.5px solid #3b82f6; border-radius: 8px; padding: 0.85rem; margin-bottom: 1.25rem; font-size: 0.85rem; color: #1e40af;">
+      <div style="font-weight: 700; margin-bottom: 0.3rem;">⚡ Demo Mode Active (SMTP not configured)</div>
+      <div>
+        Use verification code: 
+        <span style="font-size: 1.15rem; font-weight: 800; color: #1d4ed8; letter-spacing: 2px; padding: 0.15rem 0.45rem; background: #dbeafe; border-radius: 4px; display: inline-block;">{{ demo_code or '123456' }}</span>
+        <button type="button" class="btn btn-sm btn-primary" style="margin-left: 0.5rem; font-size: 0.78rem; padding: 0.25rem 0.6rem; vertical-align: middle;" onclick="document.getElementById('code').value='{{ demo_code or '123456' }}';">
+          Auto-fill Code
+        </button>
+      </div>
+      <div style="margin-top: 0.35rem; font-size: 0.78rem; color: #3b82f6;">
+        Fallback demo code <strong>123456</strong> is also accepted.
+      </div>
+    </div>
+    {% endif %}
+
     <!-- Step 2: Enter Verification Code -->
     <form method="POST" action="{{ url_for('verify_email') }}">
       <input type="hidden" name="action" value="verify">
@@ -49,6 +65,7 @@
           name="code" 
           class="form-control" 
           placeholder="e.g. 123456" 
+          value="{{ demo_code if (not has_smtp and demo_code) else '' }}"
           maxlength="6" 
           pattern="[0-9]{6}"
           style="font-size: 1.25rem; letter-spacing: 0.25em; text-align: center; font-weight: 700;"

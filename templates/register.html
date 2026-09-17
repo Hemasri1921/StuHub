@@ -249,6 +249,22 @@ async function sendVerificationCode() {
       statusMsg.textContent = '✓ ' + data.message;
       statusMsg.style.color = '#10b981';
       document.getElementById('verificationBox').style.display = 'block';
+
+      // Demo Mode Banner when SMTP is not configured
+      const demoCode = data.dev_code || '123456';
+      if (data.dev_code || data.demo_mode) {
+        let demoNotice = document.getElementById('demoCodeNotice');
+        if (!demoNotice) {
+          demoNotice = document.createElement('div');
+          demoNotice.id = 'demoCodeNotice';
+          demoNotice.style.cssText = 'background: #eff6ff; border: 1.5px solid #3b82f6; border-radius: 8px; padding: 0.75rem; margin-bottom: 0.75rem; font-size: 0.85rem; color: #1e40af;';
+          const vBox = document.getElementById('verificationBox');
+          vBox.insertBefore(demoNotice, vBox.firstChild);
+        }
+        demoNotice.innerHTML = `⚡ <strong>Demo Mode (No SMTP):</strong> Your verification code is <span style="font-size: 1.15rem; font-weight: 800; color: #1d4ed8; letter-spacing: 2px; padding: 0.15rem 0.45rem; background: #dbeafe; border-radius: 4px;">${demoCode}</span> <button type="button" class="btn btn-sm btn-primary" style="margin-left: 0.5rem; font-size: 0.78rem; padding: 0.25rem 0.6rem;" onclick="document.getElementById('verificationCodeInput').value='${demoCode}'; verifyCode();">1-Click Verify &rarr;</button>`;
+        document.getElementById('verificationCodeInput').value = demoCode;
+      }
+
       document.getElementById('verificationCodeInput').focus();
 
       // Start 60s cooldown timer

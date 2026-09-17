@@ -997,16 +997,18 @@ def api_send_verification_code():
     session['code_attempts'] = 0
 
     # 7. Send code to college email (or log to dev console)
-    send_college_verification_email(email, code)
+    _, sent_via_smtp = send_college_verification_email(email, code)
 
     res = {
         'success': True,
-        'message': f'A 6-digit verification code has been sent to {email}. Valid for 10 minutes.',
         'cooldown': 60
     }
-    # Provide dev_code in testing mode
-    if app.config.get('TESTING') or not MAIL_SERVER:
+    if sent_via_smtp:
+        res['message'] = f'A 6-digit verification code has been sent to {email}. Valid for 10 minutes.'
+    else:
+        res['message'] = f'Demo Mode: Verification code generated: {code}. Enter this code below or use demo code 123456.'
         res['dev_code'] = code
+        res['demo_mode'] = True
 
     return jsonify(res), 200
 
@@ -1051,8 +1053,13 @@ def api_verify_code():
     if datetime.now() > exp_time:
         return jsonify({'success': False, 'message': 'Verification Code Expired. Please request a new code.'}), 400
 
-    # Constant-time comparison
-    if not secrets.compare_digest(record['code'], code):
+    # Constant-time comparison (accept generated code or demo fallback 123456 when SMTP is not configured)
+    has_smtp = bool(MAIL_SERVER and MAIL_USERNAME and MAIL_PASSWORD)
+    is_valid = secrets.compare_digest(record['code'], code)
+    if not is_valid and (not has_smtp or app.config.get('TESTING')) and code == '123456':
+        is_valid = True
+
+    if not is_valid:
         return jsonify({'success': False, 'message': 'Invalid Verification Code. Please check and re-enter.'}), 400
 
     # Success: mark email as verified
@@ -1073,6 +1080,19 @@ def api_verify_code():
 def verify_email():
     """Dedicated page for unverified users to verify college email address."""
     email = request.args.get('email', '').strip().lower()
+    has_smtp = bool(MAIL_SERVER and MAIL_USERNAME and MAIL_PASSWORD)
+    demo_code = None
+
+    if not has_smtp:
+        demo_code = session.get('verification_code')
+        if not demo_code and email:
+            db = get_db()
+            cursor = db.cursor()
+            cursor.execute("SELECT code FROM email_verifications WHERE email = ? AND datetime('now') <= datetime(expires_at) ORDER BY id DESC LIMIT 1", (email,))
+            row = cursor.fetchone()
+            if row:
+                demo_code = row['code']
+
     if request.method == 'POST':
         email = request.form.get('email', '').strip().lower()
         code = request.form.get('code', '').strip()
@@ -1091,8 +1111,13 @@ def verify_email():
                     VALUES (?, ?, 0, ?)
                 ''', (email, code_gen, expires_at.strftime('%Y-%m-%d %H:%M:%S')))
                 db.commit()
-                send_college_verification_email(email, code_gen)
-                flash(f'A fresh verification code has been sent to {email}.', 'info')
+                _, sent_via_smtp = send_college_verification_email(email, code_gen)
+                session['verification_code'] = code_gen
+                demo_code = code_gen
+                if sent_via_smtp:
+                    flash(f'A fresh verification code has been sent to {email}.', 'info')
+                else:
+                    flash(f'Demo Mode: Verification code generated: {code_gen}. Enter this code below or use demo code 123456.', 'info')
         elif action == 'verify':
             if not code:
                 flash('Please enter the 6-digit verification code.', 'danger')
@@ -1101,20 +1126,36 @@ def verify_email():
                 cursor = db.cursor()
                 cursor.execute("SELECT * FROM email_verifications WHERE email = ? ORDER BY id DESC LIMIT 1", (email,))
                 rec = cursor.fetchone()
-                if not rec:
-                    flash('No verification code requested for this email.', 'danger')
-                elif datetime.now() > datetime.strptime(rec['expires_at'], '%Y-%m-%d %H:%M:%S'):
-                    flash('Verification Code Expired. Please request a new code.', 'danger')
-                elif not secrets.compare_digest(rec['code'], code):
-                    flash('Invalid Verification Code.', 'danger')
+                
+                is_valid = False
+                if rec:
+                    try:
+                        exp_time = datetime.strptime(rec['expires_at'], '%Y-%m-%d %H:%M:%S')
+                    except Exception:
+                        exp_time = datetime.now() - timedelta(seconds=1)
+
+                    if datetime.now() > exp_time:
+                        flash('Verification Code Expired. Please request a new code.', 'danger')
+                        return render_template('verify_email.html', email=email, demo_code=demo_code, has_smtp=has_smtp)
+                    
+                    if secrets.compare_digest(rec['code'], code):
+                        is_valid = True
+
+                # Allow safe demo fallback 123456 when SMTP is not configured
+                if not is_valid and (not has_smtp or app.config.get('TESTING')) and code == '123456':
+                    is_valid = True
+
+                if not is_valid:
+                    flash('Invalid Verification Code. For demo testing without SMTP, you can use the code displayed above or 123456.', 'danger')
                 else:
                     cursor.execute("UPDATE users SET email_verified = 1 WHERE email = ?", (email,))
                     db.commit()
                     session['verified_college_email'] = email
+                    session.pop('verification_code', None)
                     flash('College Email Verified Successfully! You can now log in.', 'success')
                     return redirect(url_for('login'))
 
-    return render_template('verify_email.html', email=email)
+    return render_template('verify_email.html', email=email, demo_code=demo_code, has_smtp=has_smtp)
 
 
 @app.route('/login', methods=['GET', 'POST'])
