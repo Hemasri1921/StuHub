@@ -1,0 +1,335 @@
+{% extends "base.html" %}
+
+{% block title %}StuHub – Create Student Account{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+  <div class="auth-card">
+    <div class="auth-header">
+      <h2>Create Account</h2>
+      <p>Join StuHub to access campus services</p>
+    </div>
+
+    <form method="POST" action="{{ url_for('register') }}">
+      <div class="form-group">
+        <label for="name" class="form-label">Student Full Name</label>
+        <input 
+          type="text" 
+          id="name" 
+          name="name" 
+          class="form-control" 
+          placeholder="e.g. Priya Patel" 
+          required 
+          autofocus
+        >
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="roll_number" class="form-label">Roll Number *</label>
+          <input 
+            type="text" 
+            id="roll_number" 
+            name="roll_number" 
+            class="form-control" 
+            placeholder="e.g. 22CSE045" 
+            required
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="branch" class="form-label">Branch / Department *</label>
+          <select id="branch" name="branch" class="form-control" required>
+            <option value="">Select Branch</option>
+            <option value="CSE">CSE (Computer Science & Engineering)</option>
+            <option value="IT">IT (Information Technology)</option>
+            <option value="ECE">ECE (Electronics & Communication)</option>
+            <option value="EEE">EEE (Electrical & Electronics)</option>
+            <option value="Mechanical">Mechanical Engineering</option>
+            <option value="Civil">Civil Engineering</option>
+            <option value="AI & DS">AI & DS (Artificial Intelligence & Data Science)</option>
+            <option value="AI & ML">AI & ML (Artificial Intelligence & Machine Learning)</option>
+            <option value="Other">Other Branch</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="year" class="form-label">Year of Study *</label>
+          <select id="year" name="year" class="form-control" required>
+            <option value="">Select Year</option>
+            <option value="1st Year">1st Year</option>
+            <option value="2nd Year">2nd Year</option>
+            <option value="3rd Year">3rd Year</option>
+            <option value="4th Year">4th Year</option>
+            <option value="Postgraduate">Postgraduate</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="phone" class="form-label">Phone Number *</label>
+          <input 
+            type="tel" 
+            id="phone" 
+            name="phone" 
+            class="form-control" 
+            placeholder="e.g. 9876543210" 
+            required
+          >
+        </div>
+      </div>
+
+      <!-- College Email & Verification Section -->
+      <div class="form-group" style="background: var(--bg-subtle, #f8fafc); padding: 1.15rem; border-radius: 0.85rem; border: 1.5px solid var(--border-color, #e2e8f0); margin-bottom: 1.25rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem; flex-wrap: wrap; gap: 0.35rem;">
+          <label for="email" class="form-label" style="margin-bottom: 0; font-weight: 700;">
+            Official College Email Address *
+          </label>
+          <span id="emailVerifiedBadge" style="display: none; background: #10b981; color: white; font-size: 0.72rem; font-weight: 700; padding: 0.25rem 0.65rem; border-radius: 9999px;">
+            ✓ College Email Verified
+          </span>
+        </div>
+        
+        <div style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.65rem;">
+          Must be an official institutional email (e.g. <code>@stuhub.edu</code>, <code>@college.edu.in</code>, <code>@college.ac.in</code>). Personal emails (Gmail, Yahoo, Outlook) are strictly rejected.
+        </div>
+
+        <div style="display: flex; gap: 0.5rem;">
+          <input 
+            type="email" 
+            id="email" 
+            name="email" 
+            class="form-control" 
+            placeholder="e.g. yourname@stuhub.edu" 
+            required
+            oninput="handleEmailInputChanged()"
+          >
+          <button 
+            type="button" 
+            id="sendCodeBtn" 
+            class="btn btn-primary" 
+            style="white-space: nowrap; font-size: 0.85rem; padding: 0.55rem 1rem;"
+            onclick="sendVerificationCode()"
+          >
+            Send Code
+          </button>
+        </div>
+
+        <!-- Inline Status / Error message -->
+        <div id="emailStatusMsg" style="display: none; font-size: 0.82rem; margin-top: 0.5rem; font-weight: 600;"></div>
+
+        <!-- 6-Digit Code Verification Box (revealed when code is sent) -->
+        <div id="verificationBox" style="display: none; margin-top: 0.85rem; padding-top: 0.85rem; border-top: 1px dashed var(--border-color, #cbd5e1);">
+          <label for="verificationCodeInput" style="font-size: 0.8rem; font-weight: 700; display: block; margin-bottom: 0.35rem;">
+            Enter 6-Digit Verification Code:
+          </label>
+          <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+            <input 
+              type="text" 
+              id="verificationCodeInput" 
+              maxlength="6" 
+              placeholder="123456" 
+              class="form-control" 
+              style="max-width: 150px; font-size: 1.15rem; letter-spacing: 0.2em; text-align: center; font-weight: 700;"
+            >
+            <button 
+              type="button" 
+              id="verifyCodeBtn" 
+              class="btn btn-primary" 
+              style="font-size: 0.85rem; padding: 0.55rem 1rem;"
+              onclick="verifyCode()"
+            >
+              Verify Code
+            </button>
+            <button 
+              type="button" 
+              id="resendCodeBtn" 
+              class="btn btn-secondary btn-sm" 
+              style="font-size: 0.8rem;"
+              onclick="sendVerificationCode()"
+            >
+              Resend Code
+            </button>
+          </div>
+          <div id="codeExpiryNote" style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.35rem;">
+            ⏳ Verification code expires in 10 minutes.
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="password" class="form-label">Password</label>
+        <input 
+          type="password" 
+          id="password" 
+          name="password" 
+          class="form-control" 
+          placeholder="At least 4 characters" 
+          required
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="confirm_password" class="form-label">Confirm Password</label>
+        <input 
+          type="password" 
+          id="confirm_password" 
+          name="confirm_password" 
+          class="form-control" 
+          placeholder="Re-enter your password" 
+          required
+        >
+      </div>
+
+      <button type="submit" id="submitRegisterBtn" class="btn btn-primary btn-block" style="margin-top: 1.5rem;" disabled>
+        Complete Registration &rarr;
+      </button>
+      <div id="submitNotice" style="font-size: 0.8rem; color: var(--text-muted); text-align: center; margin-top: 0.45rem;">
+        🔒 Please enter and verify your official college email above to complete registration.
+      </div>
+    </form>
+
+    <div class="auth-footer">
+      Already have an account? <a href="{{ url_for('login') }}">Log in here</a>
+    </div>
+  </div>
+</div>
+
+<script>
+let isEmailVerified = false;
+let verifiedEmailAddress = '';
+let resendCooldownTimer = null;
+
+function handleEmailInputChanged() {
+  const currentEmail = document.getElementById('email').value.trim().toLowerCase();
+  if (isEmailVerified && currentEmail !== verifiedEmailAddress) {
+    isEmailVerified = false;
+    document.getElementById('emailVerifiedBadge').style.display = 'none';
+    document.getElementById('submitRegisterBtn').disabled = true;
+    document.getElementById('submitNotice').style.display = 'block';
+    document.getElementById('emailStatusMsg').textContent = 'Email address changed. Please verify your new college email.';
+    document.getElementById('emailStatusMsg').style.color = '#f59e0b';
+    document.getElementById('emailStatusMsg').style.display = 'block';
+    document.getElementById('verificationBox').style.display = 'none';
+    document.getElementById('sendCodeBtn').disabled = false;
+    document.getElementById('sendCodeBtn').textContent = 'Send Code';
+  }
+}
+
+async function sendVerificationCode() {
+  const emailInput = document.getElementById('email');
+  const email = emailInput.value.trim().toLowerCase();
+  const statusMsg = document.getElementById('emailStatusMsg');
+  const sendBtn = document.getElementById('sendCodeBtn');
+  const resendBtn = document.getElementById('resendCodeBtn');
+
+  if (!email) {
+    statusMsg.textContent = 'Please enter your college email address first.';
+    statusMsg.style.color = '#ef4444';
+    statusMsg.style.display = 'block';
+    emailInput.focus();
+    return;
+  }
+
+  statusMsg.textContent = 'Sending 6-digit verification code...';
+  statusMsg.style.color = '#3b82f6';
+  statusMsg.style.display = 'block';
+  sendBtn.disabled = true;
+
+  try {
+    const res = await fetch('/api/send-verification-code', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email })
+    });
+    const data = await res.json();
+
+    if (res.ok && data.success) {
+      statusMsg.textContent = '✓ ' + data.message;
+      statusMsg.style.color = '#10b981';
+      document.getElementById('verificationBox').style.display = 'block';
+      document.getElementById('verificationCodeInput').focus();
+
+      // Start 60s cooldown timer
+      let remaining = data.cooldown || 60;
+      sendBtn.disabled = true;
+      if (resendBtn) resendBtn.disabled = true;
+
+      clearInterval(resendCooldownTimer);
+      resendCooldownTimer = setInterval(() => {
+        remaining--;
+        sendBtn.textContent = `Wait ${remaining}s`;
+        if (resendBtn) resendBtn.textContent = `Resend (${remaining}s)`;
+        if (remaining <= 0) {
+          clearInterval(resendCooldownTimer);
+          sendBtn.disabled = false;
+          sendBtn.textContent = 'Resend Code';
+          if (resendBtn) {
+            resendBtn.disabled = false;
+            resendBtn.textContent = 'Resend Code';
+          }
+        }
+      }, 1000);
+    } else {
+      statusMsg.textContent = '✕ ' + (data.message || 'Could not send verification code.');
+      statusMsg.style.color = '#ef4444';
+      sendBtn.disabled = false;
+    }
+  } catch (err) {
+    statusMsg.textContent = '✕ Network error sending verification code. Please retry.';
+    statusMsg.style.color = '#ef4444';
+    sendBtn.disabled = false;
+  }
+}
+
+async function verifyCode() {
+  const email = document.getElementById('email').value.trim().toLowerCase();
+  const code = document.getElementById('verificationCodeInput').value.trim();
+  const statusMsg = document.getElementById('emailStatusMsg');
+  const verifyBtn = document.getElementById('verifyCodeBtn');
+
+  if (!code || code.length !== 6) {
+    statusMsg.textContent = 'Please enter the full 6-digit verification code.';
+    statusMsg.style.color = '#ef4444';
+    statusMsg.style.display = 'block';
+    return;
+  }
+
+  verifyBtn.disabled = true;
+  verifyBtn.textContent = 'Checking...';
+
+  try {
+    const res = await fetch('/api/verify-code', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email, code: code })
+    });
+    const data = await res.json();
+
+    if (res.ok && data.success) {
+      isEmailVerified = true;
+      verifiedEmailAddress = email;
+      statusMsg.textContent = '✓ ' + data.message;
+      statusMsg.style.color = '#10b981';
+      document.getElementById('emailVerifiedBadge').style.display = 'inline-block';
+      document.getElementById('verificationBox').style.display = 'none';
+      document.getElementById('sendCodeBtn').style.display = 'none';
+      document.getElementById('email').readOnly = true;
+      document.getElementById('submitRegisterBtn').disabled = false;
+      document.getElementById('submitNotice').style.display = 'none';
+    } else {
+      statusMsg.textContent = '✕ ' + (data.message || 'Invalid verification code.');
+      statusMsg.style.color = '#ef4444';
+      verifyBtn.disabled = false;
+      verifyBtn.textContent = 'Verify Code';
+    }
+  } catch (err) {
+    statusMsg.textContent = '✕ Error verifying code. Please retry.';
+    statusMsg.style.color = '#ef4444';
+    verifyBtn.disabled = false;
+    verifyBtn.textContent = 'Verify Code';
+  }
+}
+</script>
+{% endblock %}

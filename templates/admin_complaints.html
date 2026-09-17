@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+
+{% block title %}STUHUB – Complaints Management{% endblock %}
+
+{% block content %}
+<!-- Top Header: COMPLAINTS MANAGEMENT -->
+<div class="admin-hero-banner" style="background: linear-gradient(135deg, #78350f 0%, #0f172a 100%); color: #ffffff; padding: 2.25rem; border-radius: 14px; margin-bottom: 2rem; box-shadow: 0 4px 18px rgba(120, 53, 15, 0.25);">
+  <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1.5rem;">
+    <div>
+      <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.5rem;">
+        <span style="display: inline-block; background: rgba(245, 158, 11, 0.25); color: #fcd34d; font-size: 0.78rem; font-weight: 800; letter-spacing: 1.5px; padding: 0.25rem 0.7rem; border-radius: 4px; text-transform: uppercase;">
+          CAMPUS ADMINISTRATION
+        </span>
+        <a href="{{ url_for('admin') }}" style="color: #94a3b8; font-size: 0.85rem; text-decoration: none; font-weight: 600;">
+          &larr; Admin Home
+        </a>
+      </div>
+      <h1 style="font-size: 2.2rem; font-weight: 850; margin: 0 0 0.35rem 0; color: #ffffff; letter-spacing: -0.5px;">
+        🔧 Campus Complaints Management
+      </h1>
+      <p style="font-size: 1.05rem; color: #cbd5e1; margin: 0; max-width: 700px;">
+        Review student grievance tickets for infrastructure, electrical, lab equipment, or sanitation, inspect photos, and update status.
+      </p>
+    </div>
+
+    <div style="display: flex; gap: 0.85rem; align-items: center; flex-wrap: wrap;">
+      <div style="background: rgba(255,255,255,0.12); padding: 0.5rem 1rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); font-weight: 700; color: #fff;">
+        Total Tickets: {{ complaints|length }}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FILTER CONTROLS -->
+<div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; align-items: center;">
+  <span style="font-size: 0.88rem; font-weight: 700; color: var(--text-secondary); margin-right: 0.5rem;">Filter by Status:</span>
+  <button class="btn btn-secondary btn-sm filter-btn active" data-filter="all" style="font-weight: 600;">All Tickets ({{ complaints|length }})</button>
+  <button class="btn btn-secondary btn-sm filter-btn" data-filter="Pending" style="font-weight: 600;">Pending</button>
+  <button class="btn btn-secondary btn-sm filter-btn" data-filter="In Progress" style="font-weight: 600;">In Progress</button>
+  <button class="btn btn-secondary btn-sm filter-btn" data-filter="Resolved" style="font-weight: 600;">Resolved</button>
+</div>
+
+<!-- COMPLAINTS TABLE -->
+<div class="admin-table-wrapper">
+  {% if complaints and complaints|length > 0 %}
+    <table class="admin-table" id="complaints-table">
+      <thead>
+        <tr>
+          <th style="width: 70px;">ID</th>
+          <th style="min-width: 170px;">Student</th>
+          <th>Category</th>
+          <th>Location</th>
+          <th style="min-width: 220px;">Description</th>
+          <th style="text-align: center; width: 70px;">Photo</th>
+          <th>Status</th>
+          <th style="min-width: 180px;">Update Status</th>
+          <th style="text-align: center; width: 70px;">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in complaints %}
+          <tr data-status="{{ c.status }}">
+            <td><strong>#{{ c.id }}</strong></td>
+            <td>
+              <strong>{{ c.student_name }}</strong><br>
+              <a href="mailto:{{ c.student_email }}" style="font-size: 0.78rem; color: var(--text-muted); text-decoration: none;">
+                {{ c.student_email }}
+              </a>
+            </td>
+            <td>
+              <span class="badge" style="background:#f1f5f9; color: var(--text-secondary); font-weight: 600;">
+                {{ c.category }}
+              </span>
+            </td>
+            <td style="font-size: 0.88rem;">{{ c.location }}</td>
+            <td style="max-width: 260px; font-size: 0.85rem; color: var(--text-secondary);">
+              {{ c.description }}
+            </td>
+            <td style="text-align: center;">
+              {% if c.photo %}
+                <a href="{{ url_for('static', filename='uploads/' + c.photo) }}" target="_blank" title="View Full Photo">
+                  <img 
+                    src="{{ url_for('static', filename='uploads/' + c.photo) }}" 
+                    alt="Complaint Photo" 
+                    style="width: 44px; height: 44px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border-color); display: block; margin: 0 auto;" 
+                    onerror="this.onerror=null; this.src='{{ url_for('static', filename='uploads/no_photo_placeholder.jpg') }}';"
+                  >
+                </a>
+              {% else %}
+                <span style="color: var(--text-light); font-size: 0.78rem; font-style: italic;">None</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if c.status == 'Pending' %}
+                <span class="badge badge-pending">Pending</span>
+              {% elif c.status == 'In Progress' %}
+                <span class="badge badge-in-progress">In Progress</span>
+              {% elif c.status == 'Resolved' %}
+                <span class="badge badge-resolved">Resolved</span>
+              {% else %}
+                <span class="badge">{{ c.status }}</span>
+              {% endif %}
+            </td>
+            <td>
+              <!-- Status Update Form -->
+              <form method="POST" action="{{ url_for('update_complaint_status', complaint_id=c.id) }}" style="display: flex; gap: 0.35rem; align-items: center;">
+                <select name="status" class="form-control" style="padding: 0.35rem 0.5rem; font-size: 0.82rem; width: auto; border-radius: 6px;">
+                  <option value="Pending" {% if c.status == 'Pending' %}selected{% endif %}>Pending</option>
+                  <option value="In Progress" {% if c.status == 'In Progress' %}selected{% endif %}>In Progress</option>
+                  <option value="Resolved" {% if c.status == 'Resolved' %}selected{% endif %}>Resolved</option>
+                </select>
+                <button type="submit" class="btn btn-primary btn-sm" style="padding: 0.35rem 0.75rem; font-size: 0.82rem;" title="Save new status">
+                  Save
+                </button>
+              </form>
+            </td>
+            <td style="text-align: center;">
+              <form method="POST" action="{{ url_for('delete_item', item_type='complaint', item_id=c.id) }}" onsubmit="return confirm('Delete this complaint ticket?');" style="display: inline;">
+                <button type="submit" class="btn btn-secondary btn-sm" style="color: var(--danger); padding: 0.35rem 0.55rem;" title="Delete ticket">
+                  🗑️
+                </button>
+              </form>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <div style="padding: 3rem; text-align: center; color: var(--text-muted); background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border-color);">
+      <span style="font-size: 2.5rem; display: block; margin-bottom: 0.5rem;">🔧</span>
+      <h4 style="margin: 0 0 0.5rem 0; color: var(--text-primary);">No Complaints Recorded</h4>
+      <p style="margin: 0;">No active student complaint tickets are in the database.</p>
+    </div>
+  {% endif %}
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const filterBtns = document.querySelectorAll('.filter-btn');
+    const rows = document.querySelectorAll('#complaints-table tbody tr');
+
+    filterBtns.forEach(btn => {
+      btn.addEventListener('click', function() {
+        filterBtns.forEach(b => {
+          b.classList.remove('active');
+          b.style.background = '';
+          b.style.color = '';
+        });
+        this.classList.add('active');
+        this.style.background = 'var(--primary)';
+        this.style.color = '#fff';
+
+        const filter = this.getAttribute('data-filter');
+        rows.forEach(row => {
+          const rowStatus = row.getAttribute('data-status');
+          if (filter === 'all' || rowStatus === filter) {
+            row.style.display = '';
+          } else {
+            row.style.display = 'none';
+          }
+        });
+      });
+    });
+  });
+</script>
+{% endblock %}

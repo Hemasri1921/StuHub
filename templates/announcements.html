@@ -1,0 +1,188 @@
+﻿{% extends "base.html" %}
+
+{% block title %}StuHub – Official Campus Announcements{% endblock %}
+
+{% block content %}
+<!-- Announcements Header -->
+<div class="section-header">
+  <div>
+    <h2><span>📢</span> Official Campus Announcements</h2>
+    <p style="color: var(--text-muted); font-size: 0.92rem;">Verified circulars, examination alerts, holiday notices, and administrative updates.</p>
+  </div>
+  {% if session.get('role') == 'admin' %}
+    <div>
+      <a href="{{ url_for('admin') }}#section-announcements" class="btn btn-primary btn-sm">
+        + Post New Notice
+      </a>
+    </div>
+  {% endif %}
+</div>
+
+<!-- Category / Priority Filter Bar -->
+<div class="search-controls-card" style="margin-bottom: 1.5rem; display: flex; gap: 0.75rem; align-items: center; justify-content: space-between; flex-wrap: wrap;">
+  <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+    <button type="button" class="btn btn-sm btn-primary filter-ann-btn active" data-filter="all">
+      All Notices ({{ announcements|length }})
+    </button>
+    <button type="button" class="btn btn-sm btn-secondary filter-ann-btn" data-filter="important">
+      🚨 Important Only
+    </button>
+    <button type="button" class="btn btn-sm btn-secondary filter-ann-btn" data-filter="normal">
+      📢 General Notices
+    </button>
+  </div>
+
+  <div style="font-size: 0.82rem; color: var(--text-muted);">
+    Official Administrative Channel
+  </div>
+</div>
+
+{% if announcements and announcements|length > 0 %}
+  <div class="announcements-feed" id="announcementsList">
+    {% for a in announcements %}
+      {% set is_imp = a.priority == 'Important' or a.is_important == 1 %}
+      <div class="announcement-card ann-item {% if is_imp %}border-important{% endif %}" data-priority="{% if is_imp %}important{% else %}normal{% endif %}">
+        <div class="announcement-header">
+          <div>
+            <span class="ann-badge {% if is_imp %}important{% else %}normal{% endif %}">
+              {% if is_imp %}🚨 Important Notice{% else %}📢 General Notice{% endif %}
+            </span>
+            <h3 style="margin-top: 0.4rem; font-size: 1.15rem; font-weight: 700;">{{ a.title }}</h3>
+          </div>
+          <div style="text-align: right;">
+            <span class="announcement-date">📅 {{ a.created_at|date_format }}</span>
+          </div>
+        </div>
+
+        <div class="announcement-body" style="line-height: 1.6; color: var(--text-color); margin: 0.85rem 0;">
+          {{ a.description }}
+        </div>
+
+        <div class="announcement-footer" style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 0.75rem;">
+          <span style="font-size: 0.85rem; color: var(--text-muted);">
+            🏛️ <strong>Issued By:</strong> {{ a.posted_by }} &bull; Priority: <strong>{{ a.priority or ('Important' if is_imp else 'Normal') }}</strong>
+          </span>
+
+          {% if session.get('role') == 'admin' %}
+            <div style="display: flex; gap: 0.5rem;">
+              <button 
+                type="button" 
+                class="btn btn-secondary btn-sm edit-ann-btn" 
+                data-id="{{ a.id }}" 
+                data-title="{{ a.title }}" 
+                data-desc="{{ a.description }}" 
+                data-priority="{{ a.priority or ('Important' if is_imp else 'Normal') }}"
+              >
+                ✏️ Edit
+              </button>
+              <form method="POST" action="{{ url_for('delete_item', item_type='announcement', item_id=a.id) }}" onsubmit="return confirm('Delete this announcement?');" style="display: inline;">
+                <button type="submit" class="btn btn-danger btn-sm">
+                  🗑️ Delete
+                </button>
+              </form>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="empty-state">
+    <div class="empty-state-icon">📢</div>
+    <h4>No Announcements Available</h4>
+    <p>There are currently no active campus circulars or notices.</p>
+  </div>
+{% endif %}
+
+<!-- Admin Quick Edit Modal -->
+{% if session.get('role') == 'admin' %}
+<div class="modal" id="editAnnModal" style="display: none;">
+  <div class="modal-content" style="max-width: 550px;">
+    <div class="modal-header">
+      <h3>Edit Campus Announcement</h3>
+      <button class="sidebar-close-btn" id="closeEditAnnModal">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form method="POST" id="editAnnForm" action="">
+        <div class="form-group">
+          <label class="form-label">Announcement Title *</label>
+          <input type="text" id="editAnnTitle" name="title" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Priority *</label>
+          <select id="editAnnPriority" name="priority" class="form-control" required>
+            <option value="Normal">Normal Notice</option>
+            <option value="Important">Important Alert</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description *</label>
+          <textarea id="editAnnDesc" name="description" class="form-control" rows="5" required></textarea>
+        </div>
+        <div style="display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1rem;">
+          <button type="button" class="btn btn-secondary" id="cancelEditAnnModal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Updates</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // Filter buttons
+    const filterBtns = document.querySelectorAll('.filter-ann-btn');
+    const items = document.querySelectorAll('.ann-item');
+
+    filterBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        filterBtns.forEach(b => {
+          b.classList.remove('btn-primary', 'active');
+          b.classList.add('btn-secondary');
+        });
+        btn.classList.add('btn-primary', 'active');
+        btn.classList.remove('btn-secondary');
+
+        const filter = btn.getAttribute('data-filter');
+        items.forEach(item => {
+          const priority = item.getAttribute('data-priority');
+          if (filter === 'all' || filter === priority) {
+            item.style.display = 'block';
+          } else {
+            item.style.display = 'none';
+          }
+        });
+      });
+    });
+
+    // Admin Edit modal
+    const editModal = document.getElementById('editAnnModal');
+    if (editModal) {
+      const editBtns = document.querySelectorAll('.edit-ann-btn');
+      const form = document.getElementById('editAnnForm');
+      const titleInput = document.getElementById('editAnnTitle');
+      const descInput = document.getElementById('editAnnDesc');
+      const prioritySelect = document.getElementById('editAnnPriority');
+      const closeBtn = document.getElementById('closeEditAnnModal');
+      const cancelBtn = document.getElementById('cancelEditAnnModal');
+
+      editBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = btn.getAttribute('data-id');
+          form.action = `/admin/announcement/edit/${id}`;
+          titleInput.value = btn.getAttribute('data-title');
+          descInput.value = btn.getAttribute('data-desc');
+          prioritySelect.value = btn.getAttribute('data-priority') || 'Normal';
+          editModal.style.display = 'flex';
+        });
+      });
+
+      if (closeBtn) closeBtn.addEventListener('click', () => editModal.style.display = 'none');
+      if (cancelBtn) cancelBtn.addEventListener('click', () => editModal.style.display = 'none');
+    }
+  });
+</script>
+{% endblock %}

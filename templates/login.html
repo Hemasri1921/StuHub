@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block title %}StuHub – Portal Login{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+  <div class="auth-card" style="max-width: 480px;">
+
+    <!-- TWO SEPARATE LOGIN OPTIONS: STUDENT LOGIN vs ADMIN LOGIN -->
+    <div class="login-role-tabs">
+      <button 
+        type="button" 
+        id="btnStudentTab" 
+        class="login-tab-btn {% if active_tab != 'admin' %}active{% endif %}" 
+        onclick="switchLoginMode('student')"
+      >
+        <span class="tab-icon">🎓</span>
+        <span class="tab-label">STUDENT LOGIN</span>
+      </button>
+      <button 
+        type="button" 
+        id="btnAdminTab" 
+        class="login-tab-btn {% if active_tab == 'admin' %}active{% endif %}" 
+        onclick="switchLoginMode('admin')"
+      >
+        <span class="tab-icon">🛡️</span>
+        <span class="tab-label">ADMIN LOGIN</span>
+      </button>
+    </div>
+
+    <!-- Student Header vs Admin Header -->
+    <div class="auth-header" id="headerStudent" style="{% if active_tab == 'admin' %}display: none;{% endif %}">
+      <h2>Welcome Back</h2>
+      <p>Log in to access your student portal</p>
+    </div>
+
+    <div class="auth-header" id="headerAdmin" style="{% if active_tab != 'admin' %}display: none;{% endif %}">
+      <h2 style="color: #0f172a;">Campus Administration Login</h2>
+      <p>Authorized college administration &amp; management portal</p>
+    </div>
+
+    {% if unverified_email %}
+      <div style="background-color: #fef3c7; border: 1.5px solid #f59e0b; border-radius: 0.65rem; padding: 0.85rem; margin-bottom: 1.25rem; font-size: 0.88rem; color: #92400e;">
+        <strong>⚠️ College Email Not Verified</strong>
+        <p style="margin: 0.35rem 0 0.65rem 0;">Your student account requires college email verification before logging in.</p>
+        <a href="{{ url_for('verify_email', email=unverified_email) }}" class="btn btn-primary btn-sm" style="display: inline-block; font-size: 0.82rem;">
+          Verify Email / Resend Code &rarr;
+        </a>
+      </div>
+    {% endif %}
+
+    <form method="POST" action="{{ url_for('login') }}" id="portalLoginForm">
+      <!-- Hidden input tracking which login mode is submitted -->
+      <input type="hidden" name="login_type" id="loginTypeField" value="{{ active_tab or 'student' }}">
+
+      <div class="form-group">
+        <label for="identifier" class="form-label" id="labelIdentifier">
+          {% if active_tab == 'admin' %}Administrator Email / Username{% else %}Official College Email / Student ID{% endif %}
+        </label>
+        <input 
+          type="text" 
+          id="identifier" 
+          name="identifier" 
+          class="form-control" 
+          placeholder="{% if active_tab == 'admin' %}e.g. admin@stuhub.edu{% else %}e.g. rahul@stuhub.edu{% endif %}" 
+          value="{{ identifier or unverified_email or '' }}"
+          required 
+          autofocus
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="password" class="form-label">Password</label>
+        <input 
+          type="password" 
+          id="password" 
+          name="password" 
+          class="form-control" 
+          placeholder="Enter your password" 
+          required
+        >
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block" id="btnLoginSubmit" style="margin-top: 1.5rem; font-weight: 700;">
+        {% if active_tab == 'admin' %}Log In as Administrator &rarr;{% else %}Log In to Student Portal &rarr;{% endif %}
+      </button>
+    </form>
+
+    <!-- Student Registration Link -->
+    <div class="auth-footer" id="studentRegisterPrompt" style="{% if active_tab == 'admin' %}display: none;{% endif %}">
+      Don't have an account? <a href="{{ url_for('register') }}">Register student account here</a>
+    </div>
+
+    <!-- Admin Helper Info -->
+    <div class="auth-footer" id="adminInfoPrompt" style="{% if active_tab != 'admin' %}display: none;{% endif %}; color: var(--text-muted); font-size: 0.82rem;">
+      College administrative credentials are authenticated for authorized campus personnel only.
+    </div>
+
+    <!-- Demo Credentials Helper -->
+    <div class="demo-credentials-box" style="margin-top: 1.5rem; padding: 0.85rem; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px;">
+      <h5 style="margin: 0 0 0.5rem 0; font-size: 0.82rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">
+        ⚡ Quick Demo Credentials (Click to switch &amp; fill):
+      </h5>
+      <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+        <button type="button" class="pill-btn" onclick="fillQuickCredentials('student', 'rahul@stuhub.edu', 'student123')">
+          🎓 Rahul (Student)
+        </button>
+        <button type="button" class="pill-btn" onclick="fillQuickCredentials('admin', 'admin@stuhub.edu', 'admin123')">
+          🛡️ Campus Admin (Admin)
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function switchLoginMode(mode) {
+  var loginTypeField = document.getElementById('loginTypeField');
+  var btnStudentTab = document.getElementById('btnStudentTab');
+  var btnAdminTab = document.getElementById('btnAdminTab');
+  var headerStudent = document.getElementById('headerStudent');
+  var headerAdmin = document.getElementById('headerAdmin');
+  var labelIdentifier = document.getElementById('labelIdentifier');
+  var inputIdentifier = document.getElementById('identifier');
+  var btnLoginSubmit = document.getElementById('btnLoginSubmit');
+  var studentRegisterPrompt = document.getElementById('studentRegisterPrompt');
+  var adminInfoPrompt = document.getElementById('adminInfoPrompt');
+
+  loginTypeField.value = mode;
+
+  if (mode === 'admin') {
+    btnStudentTab.classList.remove('active');
+    btnAdminTab.classList.add('active');
+    headerStudent.style.display = 'none';
+    headerAdmin.style.display = 'block';
+    labelIdentifier.textContent = 'Administrator Email / Username';
+    inputIdentifier.placeholder = 'e.g. admin@stuhub.edu';
+    btnLoginSubmit.textContent = 'Log In as Administrator →';
+    btnLoginSubmit.style.background = '#0f172a';
+    btnLoginSubmit.style.borderColor = '#0f172a';
+    studentRegisterPrompt.style.display = 'none';
+    adminInfoPrompt.style.display = 'block';
+  } else {
+    btnAdminTab.classList.remove('active');
+    btnStudentTab.classList.add('active');
+    headerAdmin.style.display = 'none';
+    headerStudent.style.display = 'block';
+    labelIdentifier.textContent = 'Official College Email / Student ID';
+    inputIdentifier.placeholder = 'e.g. rahul@stuhub.edu';
+    btnLoginSubmit.textContent = 'Log In to Student Portal →';
+    btnLoginSubmit.style.background = '';
+    btnLoginSubmit.style.borderColor = '';
+    adminInfoPrompt.style.display = 'none';
+    studentRegisterPrompt.style.display = 'block';
+  }
+}
+
+function fillQuickCredentials(mode, identifier, password) {
+  switchLoginMode(mode);
+  document.getElementById('identifier').value = identifier;
+  document.getElementById('password').value = password;
+}
+</script>
+{% endblock %}

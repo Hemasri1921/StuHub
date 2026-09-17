@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}STUHUB – Student Support Portal{% endblock %}
+
+{% block content %}
+<!-- ==============================================================================
+     FULL-SCREEN HERO SECTION (Centered over Campus Background)
+     ============================================================================== -->
+<section class="fullscreen-hero">
+  <div class="fullscreen-hero-overlay">
+    <div class="hero-center-content">
+      <h1 class="hero-center-title">STUHUB</h1>
+      <p class="hero-center-tagline">Student Support Portal</p>
+
+      <div class="hero-center-actions">
+        <a href="{{ url_for('login') }}" class="btn btn-primary btn-hero-start">
+          Get Started &rarr;
+        </a>
+        <a href="#features" class="btn btn-secondary btn-hero-features">
+          Explore Features
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==============================================================================
+     MINIMAL FEATURES SECTION (Smooth-scrolled to from 'Explore Features')
+     ============================================================================== -->
+<section class="clean-features-section" id="features">
+  <div class="clean-features-container">
+    <div class="clean-features-header">
+      <h2>Campus Services</h2>
+      <p>Simple and unified support for college students and staff.</p>
+    </div>
+
+    <div class="clean-features-grid">
+      <!-- 1. Complaints -->
+      <div class="clean-feature-card">
+        <div class="clean-feature-icon">🔧</div>
+        <h3>Complaints</h3>
+        <p>Report campus infrastructure or maintenance issues with real-time status tracking.</p>
+      </div>
+
+      <!-- 2. Lost & Found -->
+      <div class="clean-feature-card">
+        <div class="clean-feature-icon">👜</div>
+        <h3>Lost &amp; Found</h3>
+        <p>Log misplaced items or browse campus found belongings to quickly reunite with them.</p>
+      </div>
+
+      <!-- 3. Campus Events -->
+      <div class="clean-feature-card">
+        <div class="clean-feature-icon">🎓</div>
+        <h3>Campus Events</h3>
+        <p>Discover hackathons, workshops, and college fests with instant digital registration.</p>
+      </div>
+
+      <!-- 4. Announcements -->
+      <div class="clean-feature-card">
+        <div class="clean-feature-icon">📢</div>
+        <h3>Announcements</h3>
+        <p>Stay informed with official circulars, exam notices, and campus updates.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Minimal Footer -->
+<footer class="clean-footer">
+  <div class="clean-footer-container">
+    <p>&copy; {{ current_year or '2026' }} STUHUB &ndash; Student Support Portal</p>
+  </div>
+</footer>
+{% endblock %}
+

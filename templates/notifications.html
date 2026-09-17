@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}StuHub – In-App Notifications{% endblock %}
+
+{% block content %}
+<div class="notifications-header">
+  <div>
+    <h2><span>🔔</span> In-App Notifications</h2>
+    <p style="color: var(--text-muted); font-size: 0.92rem;">Stay updated with campus activities, item reports, and complaint status changes.</p>
+  </div>
+  
+  {% if notifications and notifications|length > 0 %}
+    <form method="POST" action="{{ url_for('mark_all_notifications_read') }}">
+      <button type="submit" class="btn btn-secondary btn-sm">
+        ✓ Mark All as Read
+      </button>
+    </form>
+  {% endif %}
+</div>
+
+{% if notifications and notifications|length > 0 %}
+  <div class="notifications-list">
+    {% for n in notifications %}
+      <div class="notification-card {% if not n.is_read %}unread{% endif %}">
+        <div class="notif-left">
+          <div class="notif-icon-circle">
+            {% if n.type == 'lost' %}
+              👜
+            {% elif n.type == 'found' %}
+              🔍
+            {% elif n.type == 'complaint' %}
+              🔧
+            {% elif n.type == 'announcement' %}
+              📢
+            {% else %}
+              🔔
+            {% endif %}
+          </div>
+          <div>
+            <div class="notif-title">
+              {{ n.title }}
+              {% if not n.is_read %}
+                <span class="badge" style="background: #dbeafe; color: #1d4ed8; font-size: 0.7rem; margin-left: 0.5rem;">New</span>
+              {% endif %}
+            </div>
+            <div class="notif-message">{{ n.message }}</div>
+            <div class="notif-date">📅 {{ n.created_at|datetime_format }}</div>
+          </div>
+        </div>
+
+        <div>
+          {% if not n.is_read %}
+            <form method="POST" action="{{ url_for('mark_notification_read', notif_id=n.id) }}">
+              <button type="submit" class="btn btn-secondary btn-sm" title="Mark as read">
+                Mark Read
+              </button>
+            </form>
+          {% else %}
+            <span style="font-size: 0.8rem; color: var(--text-light);">Read</span>
+          {% endif %}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="empty-state">
+    <div class="empty-state-icon">🔕</div>
+    <h4>No Notifications Yet</h4>
+    <p>You have no notifications right now. Activity alerts will appear here in real time.</p>
+  </div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}STUHUB – Admin Home{% endblock %}
+
+{% block content %}
+<!-- Header: STUHUB Admin Home - Welcome, Admin -->
+<div class="admin-hero-banner" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: #ffffff; padding: 2.25rem; border-radius: 14px; margin-bottom: 2rem; box-shadow: 0 4px 16px rgba(15, 23, 42, 0.15);">
+  <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1.5rem;">
+    <div>
+      <span style="display: inline-block; background: rgba(59, 130, 246, 0.25); color: #93c5fd; font-size: 0.78rem; font-weight: 800; letter-spacing: 1.5px; padding: 0.25rem 0.7rem; border-radius: 4px; margin-bottom: 0.6rem; text-transform: uppercase;">
+        STUHUB
+      </span>
+      <h1 style="font-size: 2.2rem; font-weight: 800; margin: 0 0 0.35rem 0; color: #ffffff; letter-spacing: -0.5px;">Admin Dashboard</h1>
+      <p style="font-size: 1.15rem; font-weight: 600; color: #cbd5e1; margin: 0 0 0.6rem 0;">Welcome, Admin</p>
+      <p style="font-size: 0.92rem; color: #94a3b8; margin: 0; max-width: 650px;">
+        Campus Administration Portal &ndash; Manage official campus events, announcements, complaints, and student records from one centralized administration portal.
+      </p>
+    </div>
+    <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+      <a href="{{ url_for('notifications') }}" class="btn btn-secondary btn-sm" style="background: rgba(255,255,255,0.12); color: #fff; border-color: rgba(255,255,255,0.25);">
+        🔔 Notifications
+      </a>
+      <a href="{{ url_for('logout') }}" class="btn btn-secondary btn-sm" style="background: rgba(239,68,68,0.2); color: #fca5a5; border-color: rgba(239,68,68,0.4);">
+        🚪 Logout
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Four Main Admin Options: Exactly 2 x 2 grid -->
+<div class="action-cards-grid">
+  <!-- Card 1: EVENTS PORTAL -->
+  <div class="action-card admin-action-card">
+    <div style="height: 140px; border-radius: 8px 8px 0 0; overflow: hidden; margin: -1.75rem -1.75rem 1.25rem -1.75rem; background: #1e1b4b;">
+      <img 
+        src="{{ url_for('static', filename='images/campus-events.jpg') }}" 
+        alt="Events Portal" 
+        style="width: 100%; height: 100%; object-fit: cover; opacity: 0.9;"
+        onerror="this.style.display='none';"
+      >
+    </div>
+    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+      <span style="font-size: 1.4rem;">🎓</span>
+      <h3 style="margin: 0; font-size: 1.25rem;">EVENTS PORTAL</h3>
+    </div>
+    <p>Create, publish and manage campus events, view registrations and access complete student registration details.</p>
+    <div class="action-card-links" style="margin-top: auto;">
+      <a href="{{ url_for('admin_events_portal') }}" class="btn btn-primary" style="font-weight: 700; width: 100%; text-align: center;">
+        Open Events Portal &rarr;
+      </a>
+    </div>
+  </div>
+
+  <!-- Card 2: ANNOUNCEMENTS -->
+  <div class="action-card admin-action-card">
+    <div style="height: 140px; border-radius: 8px 8px 0 0; overflow: hidden; margin: -1.75rem -1.75rem 1.25rem -1.75rem; background: #064e3b;">
+      <img 
+        src="{{ url_for('static', filename='images/announcements.jpg') }}" 
+        alt="Announcements" 
+        style="width: 100%; height: 100%; object-fit: cover; opacity: 0.9;"
+        onerror="this.style.display='none';"
+      >
+    </div>
+    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+      <span style="font-size: 1.4rem;">📢</span>
+      <h3 style="margin: 0; font-size: 1.25rem;">ANNOUNCEMENTS</h3>
+    </div>
+    <p>Broadcast official campus notices, academic circulars, exam schedules, and alerts directly to all registered students.</p>
+    <div class="action-card-links" style="margin-top: auto;">
+      <a href="{{ url_for('admin_announcements') }}" class="btn btn-primary" style="background: #059669; border-color: #059669; font-weight: 700; width: 100%; text-align: center;">
+        Open Announcements &rarr;
+      </a>
+    </div>
+  </div>
+
+  <!-- Card 3: COMPLAINTS -->
+  <div class="action-card admin-action-card">
+    <div style="height: 140px; border-radius: 8px 8px 0 0; overflow: hidden; margin: -1.75rem -1.75rem 1.25rem -1.75rem; background: #78350f;">
+      <img 
+        src="{{ url_for('static', filename='images/complaints.jpg') }}" 
+        alt="Complaints" 
+        style="width: 100%; height: 100%; object-fit: cover; opacity: 0.9;"
+        onerror="this.style.display='none';"
+      >
+    </div>
+    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+      <span style="font-size: 1.4rem;">🔧</span>
+      <h3 style="margin: 0; font-size: 1.25rem;">COMPLAINTS</h3>
+    </div>
+    <p>Review student grievance tickets for campus infrastructure, labs, hostels, track resolution and update status.</p>
+    <div class="action-card-links" style="margin-top: auto;">
+      <a href="{{ url_for('admin_complaints') }}" class="btn btn-primary" style="background: #d97706; border-color: #d97706; font-weight: 700; width: 100%; text-align: center;">
+        Open Complaints &rarr;
+      </a>
+    </div>
+  </div>
+
+  <!-- Card 4: STUDENTS -->
+  <div class="action-card admin-action-card">
+    <div style="height: 140px; border-radius: 8px 8px 0 0; overflow: hidden; margin: -1.75rem -1.75rem 1.25rem -1.75rem; background: #1e293b;">
+      <img 
+        src="{{ url_for('static', filename='images/students.jpg') }}" 
+        alt="Students Directory" 
+        style="width: 100%; height: 100%; object-fit: cover; opacity: 0.9;"
+        onerror="this.src='{{ url_for('static', filename='images/campus-events.jpg') }}';"
+      >
+    </div>
+    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+      <span style="font-size: 1.4rem;">👥</span>
+      <h3 style="margin: 0; font-size: 1.25rem;">STUDENTS</h3>
+    </div>
+    <p>View registered student profiles, roll numbers, academic branches, verified emails, and campus activity.</p>
+    <div class="action-card-links" style="margin-top: auto;">
+      <a href="{{ url_for('admin_students') }}" class="btn btn-primary" style="background: #334155; border-color: #334155; font-weight: 700; width: 100%; text-align: center;">
+        Open Students Directory &rarr;
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

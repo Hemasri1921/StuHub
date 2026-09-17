@@ -1,0 +1,72 @@
+﻿{% extends "base.html" %}
+
+{% block title %}StuHub – Verify College Email{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+  <div class="auth-card">
+    <div class="auth-header">
+      <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">✉️</div>
+      <h2>Verify College Email</h2>
+      <p>Official college email verification is required to activate your student account</p>
+    </div>
+
+    <!-- Step 1: Resend Code Form -->
+    <form method="POST" action="{{ url_for('verify_email') }}" style="margin-bottom: 1.5rem;">
+      <input type="hidden" name="action" value="resend">
+      <div class="form-group">
+        <label for="email" class="form-label">Official College Email Address</label>
+        <div style="display: flex; gap: 0.5rem;">
+          <input 
+            type="email" 
+            id="email" 
+            name="email" 
+            class="form-control" 
+            placeholder="e.g. yourname@stuhub.edu" 
+            value="{{ email or '' }}" 
+            required
+          >
+          <button type="submit" class="btn btn-secondary" style="white-space: nowrap;">
+            Send Code
+          </button>
+        </div>
+        <span style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-top: 0.35rem;">
+          Accepted domains: @stuhub.edu, @college.edu.in, @college.ac.in, etc.
+        </span>
+      </div>
+    </form>
+
+    <!-- Step 2: Enter Verification Code -->
+    <form method="POST" action="{{ url_for('verify_email') }}">
+      <input type="hidden" name="action" value="verify">
+      <input type="hidden" name="email" value="{{ email or '' }}">
+      
+      <div class="form-group">
+        <label for="code" class="form-label">6-Digit Verification Code</label>
+        <input 
+          type="text" 
+          id="code" 
+          name="code" 
+          class="form-control" 
+          placeholder="e.g. 123456" 
+          maxlength="6" 
+          pattern="[0-9]{6}"
+          style="font-size: 1.25rem; letter-spacing: 0.25em; text-align: center; font-weight: 700;"
+          required
+        >
+        <span style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-top: 0.35rem; text-align: center;">
+          Code expires in 10 minutes.
+        </span>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block" style="margin-top: 1rem;">
+        ✓ Verify &amp; Activate Account
+      </button>
+    </form>
+
+    <div class="auth-footer" style="margin-top: 1.5rem; text-align: center;">
+      Already verified? <a href="{{ url_for('login') }}">Back to Login</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

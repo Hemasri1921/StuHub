@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}StuHub – Student Support Portal{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="{% if request.endpoint == 'index' %}landing-page{% endif %}">
+
+  <!-- Top Navigation Bar -->
+  <nav class="navbar">
+    <div class="container navbar-inner">
+      <div class="navbar-left">
+        {% if session.get('user_id') %}
+        <button class="menu-toggle-btn" id="menuToggleBtn" title="Open Navigation Menu" aria-label="Open Navigation Menu">
+          ☰
+        </button>
+        {% endif %}
+        <a href="{% if session.get('role') == 'admin' %}{{ url_for('admin') }}{% elif session.get('user_id') %}{{ url_for('dashboard') }}{% else %}{{ url_for('index') }}{% endif %}" class="brand-logo">
+          <span>🎓</span> STUHUB
+        </a>
+      </div>
+
+      <div class="navbar-right">
+        {% if session.get('user_id') %}
+          <!-- Notifications Bell -->
+          <a href="{{ url_for('notifications') }}" class="notif-bell-btn" title="View Notifications">
+            🔔
+            {% if unread_count and unread_count > 0 %}
+              <span class="notif-badge">{{ unread_count }}</span>
+            {% endif %}
+          </a>
+
+          <!-- User Brief Pill -->
+          <a href="{{ url_for('profile') }}" class="nav-user-pill">
+            <span class="nav-user-avatar">
+              {{ current_user['name'][0] if current_user and current_user['name'] else 'S' }}
+            </span>
+            <span>{{ current_user['name'] if current_user else session.get('user_name') }}</span>
+          </a>
+        {% endif %}
+      </div>
+    </div>
+  </nav>
+
+  {% if session.get('user_id') %}
+  <!-- Three-Line Off-Canvas Sidebar Menu (☰) -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <aside class="sidebar-drawer" id="sidebarDrawer">
+    <div class="sidebar-header">
+      <div class="sidebar-title">
+        <span>🎓</span> StuHub Menu
+      </div>
+      <button class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Close menu">&times;</button>
+    </div>
+
+    <div class="sidebar-user-brief">
+      <div class="sidebar-user-avatar">
+        {{ current_user['name'][0] if current_user and current_user['name'] else 'U' }}
+      </div>
+      <div class="sidebar-user-info">
+        <h4>{{ current_user['name'] if current_user else session.get('user_name') }}</h4>
+        <p>{{ current_user['email'] if current_user else session.get('user_email') }}</p>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      {% if session.get('role') == 'admin' %}
+      <!-- STRICT ADMIN NAVIGATION: Admin Portal Only -->
+      <div class="sidebar-nav-group-title">Admin Management</div>
+      <a href="{{ url_for('admin') }}" class="sidebar-link {% if request.endpoint == 'admin' %}active{% endif %}" style="font-weight: 700;">
+        <span class="icon">🛡️</span> Admin Dashboard
+      </a>
+      <a href="{{ url_for('admin_events_portal') }}" class="sidebar-link {% if request.endpoint in ['admin_events_portal', 'admin_add_event', 'admin_event_registrations', 'admin_edit_event'] %}active{% endif %}">
+        <span class="icon">🎓</span> Events Portal
+      </a>
+      <a href="{{ url_for('admin_announcements') }}" class="sidebar-link {% if request.endpoint == 'admin_announcements' %}active{% endif %}">
+        <span class="icon">📢</span> Announcements
+      </a>
+      <a href="{{ url_for('admin_complaints') }}" class="sidebar-link {% if request.endpoint == 'admin_complaints' %}active{% endif %}">
+        <span class="icon">🔧</span> Complaints
+      </a>
+      <a href="{{ url_for('admin_students') }}" class="sidebar-link {% if request.endpoint == 'admin_students' %}active{% endif %}">
+        <span class="icon">👥</span> Students Directory
+      </a>
+      <a href="{{ url_for('notifications') }}" class="sidebar-link {% if request.endpoint == 'notifications' %}active{% endif %}">
+        <span class="icon">🔔</span> Notifications
+        {% if unread_count and unread_count > 0 %}
+          <span class="brand-badge" style="margin-left: auto;">{{ unread_count }}</span>
+        {% endif %}
+      </a>
+      <a href="{{ url_for('logout') }}" class="sidebar-link" style="color: #ef4444; margin-top: 1rem;">
+        <span class="icon">🚪</span> Logout
+      </a>
+      {% else %}
+      <!-- STRICT STUDENT NAVIGATION: Student Portal Only -->
+      <div class="sidebar-nav-group-title">Student Portal</div>
+      <!-- 1. Dashboard -->
+      <a href="{{ url_for('dashboard') }}" class="sidebar-link {% if request.endpoint == 'dashboard' %}active{% endif %}">
+        <span class="icon">🏠</span> Dashboard
+      </a>
+
+      <!-- 2. Lost & Found Items -->
+      <a href="{{ url_for('search') }}" class="sidebar-link {% if request.endpoint in ['report_lost_item', 'report_found_item', 'search'] %}active{% endif %}">
+        <span class="icon">👜</span> Lost &amp; Found Items
+      </a>
+      <div class="sidebar-sublinks">
+        <a href="{{ url_for('report_lost_item') }}" class="sidebar-sublink {% if request.endpoint == 'report_lost_item' %}active{% endif %}">
+          • Report Lost Item
+        </a>
+        <a href="{{ url_for('report_found_item') }}" class="sidebar-sublink {% if request.endpoint == 'report_found_item' %}active{% endif %}">
+          • Report Found Item
+        </a>
+        <a href="{{ url_for('search') }}" class="sidebar-sublink {% if request.endpoint == 'search' %}active{% endif %}">
+          • Search Items
+        </a>
+      </div>
+
+      <!-- 3. Complaints Raise -->
+      <a href="{{ url_for('complaints') }}" class="sidebar-link {% if request.endpoint in ['complaints', 'my_complaints'] %}active{% endif %}">
+        <span class="icon">🔧</span> Complaints Raise
+      </a>
+      <div class="sidebar-sublinks">
+        <a href="{{ url_for('complaints') }}" class="sidebar-sublink {% if request.endpoint == 'complaints' %}active{% endif %}">
+          • Raise Complaint
+        </a>
+        <a href="{{ url_for('my_complaints') }}" class="sidebar-sublink {% if request.endpoint == 'my_complaints' %}active{% endif %}">
+          • My Complaints
+        </a>
+      </div>
+
+      <!-- 4. Campus Events -->
+      <a href="{{ url_for('campus_events') }}" class="sidebar-link {% if request.endpoint in ['campus_events', 'events_technical', 'events_non_technical', 'events_upcoming', 'events_past', 'event_details', 'event_register', 'event_payment', 'event_confirmation', 'my_event_registrations'] %}active{% endif %}">
+        <span class="icon">🎓</span> Campus Events
+      </a>
+      <div class="sidebar-sublinks">
+        <a href="{{ url_for('campus_events', category='Technical') }}" class="sidebar-sublink">
+          • Technical
+        </a>
+        <a href="{{ url_for('campus_events', category='Non-Technical') }}" class="sidebar-sublink">
+          • Non-Technical
+        </a>
+        <a href="{{ url_for('events_upcoming') }}" class="sidebar-sublink">
+          • Upcoming Events
+        </a>
+        <a href="{{ url_for('events_past') }}" class="sidebar-sublink">
+          • Past Events
+        </a>
+        <a href="{{ url_for('my_event_registrations') }}" class="sidebar-sublink {% if request.endpoint == 'my_event_registrations' %}active{% endif %}">
+          • My Registrations
+        </a>
+      </div>
+
+      <!-- 5. Announcements -->
+      <a href="{{ url_for('announcements') }}" class="sidebar-link {% if request.endpoint == 'announcements' %}active{% endif %}">
+        <span class="icon">📢</span> Announcements
+      </a>
+
+      <!-- 6. Notifications -->
+      <a href="{{ url_for('notifications') }}" class="sidebar-link {% if request.endpoint == 'notifications' %}active{% endif %}">
+        <span class="icon">🔔</span> Notifications
+        {% if unread_count and unread_count > 0 %}
+          <span class="brand-badge" style="margin-left: auto;">{{ unread_count }}</span>
+        {% endif %}
+      </a>
+
+      <!-- 7. My Profile -->
+      <a href="{{ url_for('profile') }}" class="sidebar-link {% if request.endpoint == 'profile' %}active{% endif %}">
+        <span class="icon">👤</span> My Profile
+      </a>
+
+      <!-- 8. Logout -->
+      <a href="{{ url_for('logout') }}" class="sidebar-link" style="color: #ef4444;">
+        <span class="icon">🚪</span> Logout
+      </a>
+      {% endif %}
+    </nav>
+
+    <div class="sidebar-footer">
+      <a href="{{ url_for('logout') }}" class="sidebar-logout-btn">
+        <span>🚪</span> Logout
+      </a>
+    </div>
+  </aside>
+  {% endif %}
+
+  <!-- Main Content Container -->
+  <main class="main-content">
+    <div class="container">
+      <!-- Flash Alert Messages -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="flash-container">
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }}">
+                <span>{{ message }}</span>
+                <button class="alert-close-btn" aria-label="Close notification">&times;</button>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+
+      <!-- Page Block Content -->
+      {% block content %}{% endblock %}
+    </div>
+  </main>
+
+  <!-- Footer -->
+  {% if request.endpoint != 'index' %}
+  <footer class="footer">
+    <div class="container">
+      <p><strong>StuHub</strong> &ndash; Campus Student Support Portal &copy; {{ current_year }}</p>
+      <p style="font-size: 0.8rem; margin-top: 0.3rem;">Helping Students, Simplifying Campus Life</p>
+    </div>
+  </footer>
+  {% endif %}
+
+  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

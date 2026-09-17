@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}StuHub – Register for {{ event.title }}{% endblock %}
+
+{% block content %}
+<div class="form-container" style="max-width: 620px;">
+  <!-- Back Link -->
+  <div style="margin-bottom: 1.25rem;">
+    <a href="{{ url_for('event_details', event_id=event.id) }}" class="btn btn-secondary btn-sm">
+      &larr; Back to Event Details
+    </a>
+  </div>
+
+  <div class="form-header">
+    <h2><span>📝</span> Event Registration</h2>
+    <p>Registering for: <strong>{{ event.title }}</strong></p>
+  </div>
+
+  <!-- Event Summary Box -->
+  <div class="registration-summary-box">
+    <div class="reg-summary-item">
+      <span>📅 <strong>Date:</strong> {{ event.event_date }}</span>
+      <span>⏰ <strong>Time:</strong> {{ event.event_time }}</span>
+    </div>
+    <div class="reg-summary-item">
+      <span>📍 <strong>Venue:</strong> {{ event.venue }}</span>
+      <span>💰 <strong>Fee:</strong> {% if event.fee == 0 %}FREE{% else %}₹{{ event.fee }}{% endif %}</span>
+    </div>
+  </div>
+
+  <form method="POST" action="{{ url_for('event_register', event_id=event.id) }}">
+    <div class="form-group">
+      <label for="student_name" class="form-label">Student Full Name *</label>
+      <input 
+        type="text" 
+        id="student_name" 
+        name="student_name" 
+        class="form-control" 
+        value="{{ user['name'] if user else '' }}" 
+        required
+      >
+      <small style="color: var(--text-muted); font-size: 0.78rem;">Pre-filled from your student profile</small>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="roll_number" class="form-label">College Roll / Reg No. *</label>
+        <input 
+          type="text" 
+          id="roll_number" 
+          name="roll_number" 
+          class="form-control" 
+          placeholder="e.g. 22CSE045" 
+          required 
+          autofocus
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="branch" class="form-label">Department / Branch *</label>
+        <select id="branch" name="branch" class="form-control" required>
+          <option value="">Select Branch</option>
+          <option value="Computer Science & Engineering">Computer Science &amp; Engineering (CSE)</option>
+          <option value="Information Technology">Information Technology (IT)</option>
+          <option value="AI & Data Science">AI &amp; Data Science (AI/DS)</option>
+          <option value="Electronics & Communication">Electronics &amp; Communication (ECE)</option>
+          <option value="Electrical & Electronics">Electrical &amp; Electronics (EEE)</option>
+          <option value="Mechanical Engineering">Mechanical Engineering (MECH)</option>
+          <option value="Civil Engineering">Civil Engineering (CIVIL)</option>
+          <option value="Management & Commerce">Management &amp; Commerce (MBA/BBA)</option>
+          <option value="Other">Other Department</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="year" class="form-label">Academic Year *</label>
+      <select id="year" name="year" class="form-control" required>
+        <option value="">Select Year</option>
+        <option value="1st Year">1st Year</option>
+        <option value="2nd Year">2nd Year</option>
+        <option value="3rd Year">3rd Year</option>
+        <option value="4th Year">4th Year</option>
+        <option value="Postgraduate">Postgraduate (PG)</option>
+      </select>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="email" class="form-label">College / Personal Email *</label>
+        <input 
+          type="email" 
+          id="email" 
+          name="email" 
+          class="form-control" 
+          value="{{ user['email'] if user else '' }}" 
+          required
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="phone" class="form-label">Contact Phone *</label>
+        <input 
+          type="tel" 
+          id="phone" 
+          name="phone" 
+          class="form-control" 
+          value="{{ user['phone'] if user else '' }}" 
+          placeholder="e.g. 9876543210" 
+          required
+        >
+      </div>
+    </div>
+
+    <div style="margin-top: 1.75rem;">
+      {% if event.fee == 0 %}
+        <button type="submit" class="btn btn-primary btn-block btn-lg">
+          Complete Free Registration &rarr;
+        </button>
+      {% else %}
+        <button type="submit" class="btn btn-primary btn-block btn-lg">
+          Proceed to Demo Payment (₹{{ event.fee }}) &rarr;
+        </button>
+      {% endif %}
+    </div>
+  </form>
+</div>
+{% endblock %}

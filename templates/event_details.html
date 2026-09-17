@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+
+{% block title %}StuHub – {{ event.title }}{% endblock %}
+
+{% block content %}
+<div class="event-details-container">
+  <!-- Top Navigation / Breadcrumb -->
+  <div style="margin-bottom: 1.5rem;">
+    <a href="{{ url_for('campus_events') }}" class="btn btn-secondary btn-sm">
+      &larr; Back to Campus Events
+    </a>
+  </div>
+
+  <div class="event-details-card">
+    <!-- Hero / Poster Banner -->
+    <div class="event-details-poster-wrapper">
+      <img 
+        src="{{ event.poster|event_poster_url }}" 
+        alt="{{ event.title }}" 
+        class="event-details-poster"
+        onerror="this.onerror=null; this.src='{{ url_for('static', filename='uploads/events/event_default.jpg') }}';"
+      >
+      <div class="event-details-poster-overlay">
+        <span class="event-category-pill {{ event.main_category|lower|replace(' ', '-') }}">
+          {{ event.main_category }}
+        </span>
+        <span class="event-sub-tag" style="color: #fff; background: rgba(15,23,42,0.6); padding: 0.25rem 0.75rem; border-radius: 9999px;">
+          📌 {{ event.sub_category }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="event-details-body">
+      <div class="event-header-row">
+        <div>
+          <h1 class="event-details-title">{{ event.title }}</h1>
+          <p class="event-organizer-subtitle">🏛️ Organized by: <strong>{{ event.organized_by }}</strong></p>
+        </div>
+
+        <div class="event-header-status-box">
+          {% if event.status == 'Open' %}
+            <span class="badge" style="background:#ecfdf5; color:#047857; font-size: 0.9rem; padding: 0.4rem 0.9rem;">
+              ● Registration Open
+            </span>
+          {% else %}
+            <span class="badge" style="background:#fee2e2; color:#b91c1c; font-size: 0.9rem; padding: 0.4rem 0.9rem;">
+              ● Registration Closed
+            </span>
+          {% endif %}
+
+          <div style="margin-top: 0.5rem; font-size: 1.15rem; font-weight: 800; color: var(--primary);">
+            Fee: {% if event.fee == 0 %}FREE{% else %}₹{{ event.fee }}{% endif %}
+          </div>
+        </div>
+      </div>
+
+      <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 1.5rem 0;">
+
+      <!-- Key Event Logistics Grid -->
+      <div class="event-logistics-grid">
+        <div class="event-logistics-item">
+          <div class="logistics-icon">📅</div>
+          <div>
+            <label>Event Date</label>
+            <span>{{ event.event_date }}</span>
+          </div>
+        </div>
+
+        <div class="event-logistics-item">
+          <div class="logistics-icon">⏰</div>
+          <div>
+            <label>Event Time</label>
+            <span>{{ event.event_time }}</span>
+          </div>
+        </div>
+
+        <div class="event-logistics-item">
+          <div class="logistics-icon">📍</div>
+          <div>
+            <label>Campus Venue</label>
+            <span>{{ event.venue }}</span>
+          </div>
+        </div>
+
+        <div class="event-logistics-item">
+          <div class="logistics-icon">💺</div>
+          <div>
+            <label>Seats Available</label>
+            <span style="font-weight: 700; color: {% if seats_left > 0 %}#047857{% else %}#b91c1c{% endif %};">
+              {{ seats_left }} / {{ event.total_seats }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Description -->
+      <div class="event-info-section">
+        <h3>About This Event</h3>
+        <p class="event-full-description">{{ event.description }}</p>
+      </div>
+
+      <!-- Eligibility & Registration Window -->
+      <div class="event-info-section">
+        <h3>Participation &amp; Eligibility</h3>
+        <div class="profile-info-grid" style="margin-bottom: 0;">
+          <div class="profile-info-item">
+            <label>Who Can Participate</label>
+            <span>{{ event.eligibility }}</span>
+          </div>
+          <div class="profile-info-item">
+            <label>Registration Start Date</label>
+            <span>{{ event.reg_start_date if event.reg_start_date else 'Now Active' }}</span>
+          </div>
+          <div class="profile-info-item">
+            <label>Registration Last Date</label>
+            <span>{{ event.reg_end_date if event.reg_end_date else 'Till Seats Fill' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Contact Person Info -->
+      <div class="event-info-section">
+        <h3>Event Coordinator Contact</h3>
+        <div class="profile-info-grid" style="margin-bottom: 0;">
+          <div class="profile-info-item">
+            <label>Contact Person</label>
+            <span>{{ event.contact_person if event.contact_person else 'Event Coordinator' }}</span>
+          </div>
+          <div class="profile-info-item">
+            <label>Contact Email</label>
+            <span>{{ event.contact_email if event.contact_email else 'events@stuhub.edu' }}</span>
+          </div>
+          <div class="profile-info-item">
+            <label>Contact Phone</label>
+            <span>{{ event.contact_phone if event.contact_phone else 'N/A' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Registration CTA Section -->
+      <div class="event-registration-cta-box">
+        {% if existing_reg %}
+          <div class="alert alert-success" style="margin-bottom: 1rem;">
+            <span>✓ <strong>You are registered for this event!</strong> Registration ID: <code>{{ existing_reg.registration_id }}</code></span>
+          </div>
+          <a href="{{ url_for('event_confirmation', reg_id=existing_reg.registration_id) }}" class="btn btn-primary btn-lg">
+            📄 View Registration Confirmation
+          </a>
+        {% elif event.status != 'Open' %}
+          <div class="alert alert-warning" style="margin-bottom: 1rem;">
+            <span>⚠️ Registrations for this event have been officially closed by campus organizers.</span>
+          </div>
+          <button class="btn btn-secondary btn-lg" disabled style="opacity: 0.6; cursor: not-allowed;">
+            Registration Closed
+          </button>
+        {% elif seats_left <= 0 %}
+          <div class="alert alert-danger" style="margin-bottom: 1rem;">
+            <span>⚠️ This event has reached its maximum seat capacity (Housefull).</span>
+          </div>
+          <button class="btn btn-secondary btn-lg" disabled style="opacity: 0.6; cursor: not-allowed;">
+            Fully Booked
+          </button>
+        {% else %}
+          <div style="margin-bottom: 1rem;">
+            <p style="font-size: 0.95rem; color: var(--text-secondary);">
+              Registration Fee: <strong>{% if event.fee == 0 %}FREE{% else %}₹{{ event.fee }}{% endif %}</strong> | 
+              Remaining Seats: <strong>{{ seats_left }}</strong>
+            </p>
+          </div>
+          <a href="{{ url_for('event_register', event_id=event.id) }}" class="btn btn-primary btn-lg">
+            Register for Event &rarr;
+          </a>
+        {% endif %}
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

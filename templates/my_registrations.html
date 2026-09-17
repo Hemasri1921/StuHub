@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}StuHub – My Event Registrations{% endblock %}
+
+{% block content %}
+<div class="section-header">
+  <div>
+    <h2><span>📋</span> My Event Registrations</h2>
+    <p style="color: var(--text-muted); font-size: 0.92rem;">
+      Track and access your passes for registered college events and student activities.
+    </p>
+  </div>
+  <div>
+    <a href="{{ url_for('campus_events') }}" class="btn btn-primary btn-sm">
+      + Browse More Events
+    </a>
+  </div>
+</div>
+
+{% if registrations and registrations|length > 0 %}
+  <div class="complaints-list">
+    {% for r in registrations %}
+      <div class="complaint-card" style="border-left: 5px solid var(--primary);">
+        <img 
+          src="{{ r.poster|event_poster_url }}" 
+          alt="{{ r.event_title }}" 
+          class="complaint-photo"
+          style="width: 140px; height: 110px; object-fit: cover; border-radius: 0.5rem;"
+          onerror="this.onerror=null; this.src='{{ url_for('static', filename='uploads/events/event_default.jpg') }}';"
+        >
+
+        <div class="complaint-body">
+          <div class="complaint-top">
+            <div>
+              <span class="event-category-pill {{ r.main_category|lower|replace(' ', '-') }}" style="font-size: 0.72rem; padding: 0.15rem 0.5rem;">
+                {{ r.main_category }} &bull; {{ r.sub_category }}
+              </span>
+              <h3 style="font-size: 1.25rem; font-weight: 700; margin-top: 0.25rem; color: var(--text-main);">
+                {{ r.event_title }}
+              </h3>
+            </div>
+
+            <div style="display: flex; gap: 0.4rem; align-items: center;">
+              <span class="badge badge-resolved">
+                ✓ {{ r.registration_status }}
+              </span>
+              <span class="badge" style="background:#dbeafe; color:#1d4ed8;">
+                {{ r.payment_status }}
+              </span>
+            </div>
+          </div>
+
+          <div class="complaint-meta" style="margin-top: 0.5rem; margin-bottom: 0.75rem;">
+            <span>📅 <strong>Date:</strong> {{ r.event_date }}</span>
+            <span>⏰ <strong>Time:</strong> {{ r.event_time }}</span>
+            <span>📍 <strong>Venue:</strong> {{ r.venue }}</span>
+            <span>🆔 <strong>Reg ID:</strong> <code style="font-weight: 700; color: var(--primary);">{{ r.registration_id }}</code></span>
+          </div>
+
+          <div style="display: flex; gap: 0.6rem;">
+            <a href="{{ url_for('event_confirmation', reg_id=r.registration_id) }}" class="btn btn-secondary btn-sm">
+              📄 View Digital Pass
+            </a>
+            <a href="{{ url_for('event_details', event_id=r.event_id) }}" class="btn btn-secondary btn-sm">
+              Event Details &rarr;
+            </a>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="empty-state">
+    <div class="empty-state-icon">🎟️</div>
+    <h4>No Event Registrations Yet</h4>
+    <p>You have not registered for any upcoming campus events or competitions.</p>
+    <a href="{{ url_for('campus_events') }}" class="btn btn-primary btn-sm" style="margin-top: 1rem;">
+      Explore Campus Events
+    </a>
+  </div>
+{% endif %}
+{% endblock %}

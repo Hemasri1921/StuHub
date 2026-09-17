@@ -1,0 +1,315 @@
+{% extends "base.html" %}
+
+{% block title %}STUHUB – Events Portal{% endblock %}
+
+{% block content %}
+<!-- Top Header: EVENTS PORTAL & + POST NEW EVENT -->
+<div class="admin-hero-banner" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: #ffffff; padding: 2.25rem; border-radius: 14px; margin-bottom: 2rem; box-shadow: 0 4px 18px rgba(15, 23, 42, 0.15);">
+  <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1.5rem;">
+    <div>
+      <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.5rem;">
+        <span style="display: inline-block; background: rgba(59, 130, 246, 0.25); color: #93c5fd; font-size: 0.78rem; font-weight: 800; letter-spacing: 1.5px; padding: 0.25rem 0.7rem; border-radius: 4px; text-transform: uppercase;">
+          CAMPUS ADMINISTRATION
+        </span>
+        <a href="{{ url_for('admin') }}" style="color: #94a3b8; font-size: 0.85rem; text-decoration: none;">
+          &larr; Admin Dashboard
+        </a>
+      </div>
+      <h1 style="font-size: 2.4rem; font-weight: 850; margin: 0 0 0.35rem 0; color: #ffffff; letter-spacing: -0.5px;">
+        EVENTS PORTAL
+      </h1>
+      <p style="font-size: 1.05rem; color: #cbd5e1; margin: 0 0 0.5rem 0;">
+        Create, publish and manage campus events, view registrations and access complete student registration details.
+      </p>
+    </div>
+
+    <div style="display: flex; gap: 0.85rem; align-items: center; flex-wrap: wrap;">
+      <a href="{{ url_for('admin_event_registrations', event_id=0) }}" class="btn btn-secondary btn-sm" style="background: rgba(255,255,255,0.12); color: #fff; border-color: rgba(255,255,255,0.25); font-weight: 600;">
+        👥 All Registered Students ({{ stats.total_registrations }})
+      </a>
+      <a href="{{ url_for('admin_add_event') }}" class="btn btn-primary" style="font-weight: 750; padding: 0.7rem 1.4rem; font-size: 0.95rem; border-radius: 8px; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);">
+        + POST NEW EVENT
+      </a>
+    </div>
+  </div>
+
+  <!-- Summary Statistics Bar -->
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-top: 1.75rem; padding-top: 1.5rem; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+    <div style="background: rgba(255,255,255,0.06); padding: 0.85rem 1rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);">
+      <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.8px; color: #94a3b8; font-weight: 700;">Upcoming Events</div>
+      <div style="font-size: 1.6rem; font-weight: 800; color: #60a5fa;">{{ stats.upcoming_count }}</div>
+    </div>
+    <div style="background: rgba(255,255,255,0.06); padding: 0.85rem 1rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);">
+      <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.8px; color: #94a3b8; font-weight: 700;">Past Events</div>
+      <div style="font-size: 1.6rem; font-weight: 800; color: #cbd5e1;">{{ stats.past_count }}</div>
+    </div>
+    <div style="background: rgba(255,255,255,0.06); padding: 0.85rem 1rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);">
+      <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.8px; color: #94a3b8; font-weight: 700;">Total Registrations</div>
+      <div style="font-size: 1.6rem; font-weight: 800; color: #34d399;">{{ stats.total_registrations }}</div>
+    </div>
+    <div style="background: rgba(255,255,255,0.06); padding: 0.85rem 1rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);">
+      <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.8px; color: #94a3b8; font-weight: 700;">Total Seat Capacity</div>
+      <div style="font-size: 1.6rem; font-weight: 800; color: #facc15;">{{ stats.total_capacity }}</div>
+    </div>
+  </div>
+</div>
+
+<!-- Quick Navigation Anchors -->
+<div style="display: flex; gap: 0.75rem; margin-bottom: 2rem; align-items: center; flex-wrap: wrap;">
+  <a href="#upcoming-events" class="btn btn-secondary btn-sm" style="font-weight: 700;">
+    📅 Upcoming Events ({{ stats.upcoming_count }})
+  </a>
+  <a href="#past-events" class="btn btn-secondary btn-sm" style="font-weight: 700;">
+    ⏳ Past Events ({{ stats.past_count }})
+  </a>
+  <a href="{{ url_for('campus_events') }}" class="btn btn-secondary btn-sm" target="_blank" style="margin-left: auto;">
+    Public Events Catalog ↗
+  </a>
+</div>
+
+<!-- ==============================================================================
+     SECTION 1: UPCOMING EVENTS
+     ============================================================================== -->
+<div class="section-header" id="upcoming-events" style="margin-bottom: 1.25rem;">
+  <div>
+    <h2 style="font-size: 1.5rem; font-weight: 800; color: var(--text-main); margin: 0 0 0.25rem 0;">
+      <span>📅</span> UPCOMING EVENTS
+    </h2>
+    <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">
+      Active and upcoming campus competitions, workshops, conferences, and fests.
+    </p>
+  </div>
+  <a href="{{ url_for('admin_add_event') }}" class="btn btn-primary btn-sm" style="font-weight: 700;">
+    + Post New Event
+  </a>
+</div>
+
+{% if upcoming_events and upcoming_events|length > 0 %}
+  <div style="display: flex; flex-direction: column; gap: 1.5rem; margin-bottom: 3rem;">
+    {% for ev in upcoming_events %}
+      <div class="event-admin-card" style="background: #ffffff; border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; box-shadow: var(--shadow-sm); display: grid; grid-template-columns: 280px 1fr; transition: box-shadow 0.2s ease;">
+        <!-- Left: Event Poster -->
+        <div style="position: relative; background: #1e293b; min-height: 220px;">
+          <img 
+            src="{{ ev.poster|event_poster_url }}" 
+            alt="{{ ev.title }}" 
+            style="width: 100%; height: 100%; object-fit: cover; display: block;"
+            onerror="this.onerror=null; this.src='{{ url_for('static', filename='uploads/events/event_default.jpg') }}';"
+          >
+          <div style="position: absolute; top: 12px; left: 12px; display: flex; gap: 0.4rem; flex-wrap: wrap;">
+            <span class="badge" style="background: rgba(15, 23, 42, 0.85); color: #ffffff; font-weight: 700; font-size: 0.72rem; backdrop-filter: blur(4px);">
+              {{ ev.main_category }}
+            </span>
+            <span class="badge" style="background: rgba(37, 99, 235, 0.9); color: #ffffff; font-weight: 700; font-size: 0.72rem; backdrop-filter: blur(4px);">
+              {{ ev.sub_category }}
+            </span>
+          </div>
+
+          <div style="position: absolute; bottom: 12px; left: 12px;">
+            {% if ev.status == 'Open' %}
+              <span class="badge" style="background: #10b981; color: #ffffff; font-weight: 800; font-size: 0.75rem;">
+                ● REGISTRATION OPEN
+              </span>
+            {% else %}
+              <span class="badge" style="background: #ef4444; color: #ffffff; font-weight: 800; font-size: 0.75rem;">
+                ● REGISTRATION CLOSED
+              </span>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Right: Event Information & Action Buttons -->
+        <div style="padding: 1.5rem 1.75rem; display: flex; flex-direction: column; justify-content: space-between;">
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; margin-bottom: 0.6rem;">
+              <div>
+                <h3 style="font-size: 1.4rem; font-weight: 800; color: var(--text-main); margin: 0 0 0.3rem 0; line-height: 1.25;">
+                  <a href="{{ url_for('event_details', event_id=ev.id) }}" target="_blank" style="color: inherit; text-decoration: none;">
+                    {{ ev.title }}
+                  </a>
+                </h3>
+                <p style="font-size: 0.86rem; color: var(--text-muted); margin: 0;">
+                  Organized by: <strong style="color: var(--text-secondary);">{{ ev.organized_by or 'College Department' }}</strong>
+                </p>
+              </div>
+              <div style="text-align: right;">
+                <div style="font-size: 1.2rem; font-weight: 800; color: var(--primary);">
+                  {% if ev.fee == 0 %}FREE{% else %}₹{{ ev.fee }}{% endif %}
+                </div>
+                <div style="font-size: 0.76rem; color: var(--text-muted);">Entry Fee</div>
+              </div>
+            </div>
+
+            <!-- Key Event Meta Grid -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.75rem; background: var(--bg-subtle); padding: 0.85rem 1.1rem; border-radius: 8px; margin: 1rem 0; font-size: 0.86rem; border: 1px solid var(--border-color);">
+              <div>
+                <span style="font-size: 0.72rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block;">📅 Date &amp; Time</span>
+                <strong style="color: var(--text-main);">{{ ev.event_date }}</strong>
+                <span style="font-size: 0.76rem; color: var(--text-muted); display: block;">{{ ev.event_time }}</span>
+              </div>
+              <div>
+                <span style="font-size: 0.72rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block;">📍 Venue</span>
+                <strong style="color: var(--text-main);">{{ ev.venue }}</strong>
+              </div>
+              <div>
+                <span style="font-size: 0.72rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block;">💺 Total Seats</span>
+                <strong style="color: var(--text-main);">{{ ev.total_seats }} Seats</strong>
+              </div>
+              <div>
+                <span style="font-size: 0.72rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block;">👥 Registrations</span>
+                <strong style="color: #2563eb;">{{ ev.registered_count }} Registered</strong>
+              </div>
+              <div>
+                <span style="font-size: 0.72rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block;">🟢 Available Seats</span>
+                <strong style="color: {% if ev.available_seats > 0 %}#059669{% else %}#dc2626{% endif %};">
+                  {{ ev.available_seats }} Seats Left
+                </strong>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Actions Bar: Exactly as requested -->
+          <div style="display: flex; gap: 0.6rem; align-items: center; justify-content: space-between; flex-wrap: wrap; padding-top: 0.75rem; border-top: 1px solid var(--border-color);">
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;">
+              <!-- 1. View Details -->
+              <a href="{{ url_for('event_details', event_id=ev.id) }}" target="_blank" class="btn btn-secondary btn-sm" title="View Public Details">
+                👁️ View Details
+              </a>
+
+              <!-- 2. View Students -->
+              <a href="{{ url_for('admin_event_registrations', event_id=ev.id) }}" class="btn btn-primary btn-sm" style="font-weight: 700;">
+                👥 View Students ({{ ev.registered_count }})
+              </a>
+
+              <!-- 3. Edit -->
+              <a href="{{ url_for('admin_edit_event', event_id=ev.id) }}" class="btn btn-secondary btn-sm" title="Edit Event Specifications">
+                ✏️ Edit
+              </a>
+            </div>
+
+            <div style="display: flex; gap: 0.4rem; align-items: center;">
+              <!-- Toggle Status (Open / Close) -->
+              <form method="POST" action="{{ url_for('admin_toggle_event_status', event_id=ev.id) }}" style="display: inline;">
+                <button type="submit" class="btn btn-secondary btn-sm" title="Toggle Registration Status">
+                  {% if ev.status == 'Open' %}🔒 Close Registration{% else %}🔓 Open Registration{% endif %}
+                </button>
+              </form>
+
+              <!-- 4. Delete -->
+              <form method="POST" action="{{ url_for('admin_delete_event', event_id=ev.id) }}" onsubmit="return confirm('Delete this event &quot;{{ ev.title }}&quot; and all its student registration data?');" style="display: inline;">
+                <button type="submit" class="btn btn-secondary btn-sm" style="color: #ef4444; border-color: #fecaca;" title="Delete Event">
+                  🗑️ Delete
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="empty-state" style="margin-bottom: 3rem;">
+    <div class="empty-state-icon">🎓</div>
+    <h4>No Upcoming Campus Events</h4>
+    <p>There are currently no active upcoming events scheduled.</p>
+    <a href="{{ url_for('admin_add_event') }}" class="btn btn-primary btn-sm" style="margin-top: 0.5rem;">
+      + Post First Event
+    </a>
+  </div>
+{% endif %}
+
+
+<!-- ==============================================================================
+     SECTION 2: PAST EVENTS
+     ============================================================================== -->
+<div class="section-header" id="past-events" style="margin-bottom: 1.25rem;">
+  <div>
+    <h2 style="font-size: 1.5rem; font-weight: 800; color: var(--text-main); margin: 0 0 0.25rem 0;">
+      <span>⏳</span> PAST EVENTS
+    </h2>
+    <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">
+      Completed campus events and historical student attendance records.
+    </p>
+  </div>
+</div>
+
+{% if past_events and past_events|length > 0 %}
+  <div style="display: flex; flex-direction: column; gap: 1.25rem; margin-bottom: 3rem;">
+    {% for pev in past_events %}
+      <div class="event-admin-card" style="background: #ffffff; border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; display: grid; grid-template-columns: 200px 1fr; opacity: 0.95;">
+        <!-- Left: Poster -->
+        <div style="position: relative; background: #1e293b; min-height: 140px;">
+          <img 
+            src="{{ pev.poster|event_poster_url }}" 
+            alt="{{ pev.title }}" 
+            style="width: 100%; height: 100%; object-fit: cover; display: block; filter: grayscale(25%);"
+            onerror="this.onerror=null; this.src='{{ url_for('static', filename='uploads/events/event_default.jpg') }}';"
+          >
+          <div style="position: absolute; top: 8px; left: 8px;">
+            <span class="badge" style="background: rgba(15, 23, 42, 0.85); color: #ffffff; font-size: 0.7rem;">
+              {{ pev.main_category }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Right: Info & Actions -->
+        <div style="padding: 1.25rem 1.5rem; display: flex; flex-direction: column; justify-content: space-between;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem;">
+            <div>
+              <h4 style="font-size: 1.2rem; font-weight: 800; color: var(--text-main); margin: 0 0 0.3rem 0;">
+                {{ pev.title }}
+              </h4>
+              <p style="font-size: 0.84rem; color: var(--text-muted); margin: 0;">
+                📅 {{ pev.event_date }} at {{ pev.venue }} &bull; {{ pev.organized_by }}
+              </p>
+            </div>
+            <div style="text-align: right;">
+              <span class="badge" style="background: #f1f5f9; color: #475569; font-weight: 700; font-size: 0.82rem; padding: 0.3rem 0.65rem;">
+                👥 {{ pev.registered_count }} Total Registrations
+              </span>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 0.5rem; align-items: center; margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid var(--border-color);">
+            <!-- View Details -->
+            <a href="{{ url_for('event_details', event_id=pev.id) }}" target="_blank" class="btn btn-secondary btn-sm">
+              👁️ View Details
+            </a>
+
+            <!-- View Students -->
+            <a href="{{ url_for('admin_event_registrations', event_id=pev.id) }}" class="btn btn-primary btn-sm" style="font-weight: 700;">
+              👥 View Students ({{ pev.registered_count }})
+            </a>
+
+            <!-- Edit -->
+            <a href="{{ url_for('admin_edit_event', event_id=pev.id) }}" class="btn btn-secondary btn-sm" title="Edit">
+              ✏️ Edit
+            </a>
+
+            <!-- Delete -->
+            <form method="POST" action="{{ url_for('admin_delete_event', event_id=pev.id) }}" onsubmit="return confirm('Delete past event record &quot;{{ pev.title }}&quot;?');" style="margin-left: auto;">
+              <button type="submit" class="btn btn-secondary btn-sm" style="color: #ef4444; border-color: #fecaca;">
+                🗑️ Delete
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="empty-state">
+    <div class="empty-state-icon">⏳</div>
+    <h4>No Past Events</h4>
+    <p>Completed events will appear here automatically once their dates pass.</p>
+  </div>
+{% endif %}
+
+<style>
+@media (max-width: 768px) {
+  .event-admin-card {
+    grid-template-columns: 1fr !important;
+  }
+}
+</style>
+{% endblock %}

@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block title %}STUHUB – Registered Students Directory{% endblock %}
+
+{% block content %}
+<!-- Top Header: STUDENTS DIRECTORY -->
+<div class="admin-hero-banner" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: #ffffff; padding: 2.25rem; border-radius: 14px; margin-bottom: 2rem; box-shadow: 0 4px 18px rgba(30, 41, 59, 0.25);">
+  <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1.5rem;">
+    <div>
+      <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.5rem;">
+        <span style="display: inline-block; background: rgba(148, 163, 184, 0.25); color: #cbd5e1; font-size: 0.78rem; font-weight: 800; letter-spacing: 1.5px; padding: 0.25rem 0.7rem; border-radius: 4px; text-transform: uppercase;">
+          CAMPUS ADMINISTRATION
+        </span>
+        <a href="{{ url_for('admin') }}" style="color: #94a3b8; font-size: 0.85rem; text-decoration: none; font-weight: 600;">
+          &larr; Admin Home
+        </a>
+      </div>
+      <h1 style="font-size: 2.2rem; font-weight: 850; margin: 0 0 0.35rem 0; color: #ffffff; letter-spacing: -0.5px;">
+        👥 Registered Students Directory
+      </h1>
+      <p style="font-size: 1.05rem; color: #cbd5e1; margin: 0; max-width: 700px;">
+        Complete student directory, roll numbers, academic departments, verified institutional emails, and activity records.
+      </p>
+    </div>
+
+    <div style="display: flex; gap: 0.85rem; align-items: center; flex-wrap: wrap;">
+      <a href="{{ url_for('admin_event_registrations', event_id=0) }}" class="btn btn-secondary btn-sm" style="background: rgba(255,255,255,0.12); color: #fff; border-color: rgba(255,255,255,0.25); font-weight: 600;">
+        Event Attendees Roster ↗
+      </a>
+      <div style="background: rgba(255,255,255,0.12); padding: 0.5rem 1rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); font-weight: 700; color: #fff;">
+        Total Students: {{ students|length }}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SEARCH BAR -->
+<div style="margin-bottom: 1.5rem; display: flex; gap: 1rem; align-items: center; background: var(--bg-card); padding: 1rem; border-radius: 10px; border: 1px solid var(--border-color);">
+  <span style="font-size: 1.2rem;">🔍</span>
+  <input 
+    type="text" 
+    id="studentSearch" 
+    class="form-control" 
+    placeholder="Search by student name, roll number, department, or college email..."
+    style="border: none; background: transparent; padding: 0.4rem; font-size: 0.95rem;"
+  >
+</div>
+
+<!-- STUDENTS DIRECTORY TABLE -->
+<div class="admin-table-wrapper">
+  {% if students and students|length > 0 %}
+    <table class="admin-table" id="studentsTable">
+      <thead>
+        <tr>
+          <th>Student ID</th>
+          <th>Full Name</th>
+          <th>Roll Number</th>
+          <th>Branch / Dept</th>
+          <th>Year</th>
+          <th>College Email</th>
+          <th>Phone Number</th>
+          <th>Email Verified</th>
+          <th>Joined On</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in students %}
+          <tr>
+            <td><strong>#STU-{{ "%04d" % s.id }}</strong></td>
+            <td><strong>{{ s.name }}</strong></td>
+            <td><code>{{ s.roll_number or 'N/A' }}</code></td>
+            <td><span class="badge" style="background: #f1f5f9; color: #1e293b; font-weight: 600;">{{ s.branch or 'N/A' }}</span></td>
+            <td>{{ s.year or 'N/A' }}</td>
+            <td><a href="mailto:{{ s.email }}" style="color: var(--primary); text-decoration: none;">{{ s.email }}</a></td>
+            <td>{{ s.phone if s.phone else 'N/A' }}</td>
+            <td>
+              {% if s.email_verified %}
+                <span class="badge" style="background: #ecfdf5; color: #047857; font-weight: 700;">Verified</span>
+              {% else %}
+                <span class="badge" style="background: #fffbeb; color: #b45309; font-weight: 700;">Pending</span>
+              {% endif %}
+            </td>
+            <td style="font-size: 0.82rem; color: var(--text-muted); white-space: nowrap;">
+              {{ s.created_at|date_format if s.created_at else 'Active' }}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <div style="padding: 3rem; text-align: center; color: var(--text-muted); background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border-color);">
+      <span style="font-size: 2.5rem; display: block; margin-bottom: 0.5rem;">👥</span>
+      <h4 style="margin: 0 0 0.5rem 0; color: var(--text-primary);">No Students Registered Yet</h4>
+      <p style="margin: 0;">Students who create accounts will appear here automatically.</p>
+    </div>
+  {% endif %}
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('studentSearch');
+    const tableRows = document.querySelectorAll('#studentsTable tbody tr');
+
+    if (searchInput && tableRows.length > 0) {
+      searchInput.addEventListener('input', function() {
+        const query = this.value.toLowerCase().trim();
+        tableRows.forEach(row => {
+          const text = row.textContent.toLowerCase();
+          if (text.includes(query)) {
+            row.style.display = '';
+          } else {
+            row.style.display = 'none';
+          }
+        });
+      });
+    }
+  });
+</script>
+{% endblock %}

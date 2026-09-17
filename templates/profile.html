@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+
+{% block title %}StuHub – Student Profile{% endblock %}
+
+{% block content %}
+<div class="profile-card">
+  <!-- Profile Picture -->
+  {% if user['profile_pic'] and user['profile_pic'] != 'default_avatar.png' %}
+    <img 
+      src="{{ url_for('static', filename='uploads/' + user['profile_pic']) }}" 
+      alt="{{ user['name'] }}" 
+      class="profile-avatar-large"
+      onerror="this.onerror=null; this.src='{{ url_for('static', filename='uploads/default_avatar.png') }}';"
+    >
+  {% else %}
+    <div class="profile-avatar-fallback">
+      {{ user['name'][0] if user['name'] else 'S' }}
+    </div>
+  {% endif %}
+
+  <h2 class="profile-name">{{ user['name'] }}</h2>
+  <span class="profile-role-badge">
+    🎓 {{ user['role']|capitalize }} Account &bull; Roll: {{ user['roll_number'] or '22CSE045' }}
+  </span>
+
+  <!-- Contact & Academic Profile Grid -->
+  <div class="profile-info-grid" style="margin-top: 1.5rem;">
+    <div class="profile-info-item">
+      <label>Student Full Name</label>
+      <span style="font-weight: 600;">{{ user['name'] }}</span>
+    </div>
+
+    <div class="profile-info-item">
+      <label>College Roll / Reg No.</label>
+      <span style="font-family: monospace; font-weight: 700; color: var(--primary);">{{ user['roll_number'] or 'Not Specified' }}</span>
+    </div>
+
+    <div class="profile-info-item">
+      <label>Department / Branch</label>
+      <span>{{ user['branch'] or 'Computer Science & Engineering' }}</span>
+    </div>
+
+    <div class="profile-info-item">
+      <label>Academic Year</label>
+      <span>{{ user['year'] or '3rd Year' }}</span>
+    </div>
+
+    <div class="profile-info-item">
+      <label>Email Address</label>
+      <span>{{ user['email'] }}</span>
+    </div>
+
+    <div class="profile-info-item">
+      <label>Contact Phone</label>
+      <span>{{ user['phone'] if user['phone'] else 'Not provided' }}</span>
+    </div>
+
+    <div class="profile-info-item">
+      <label>Account ID</label>
+      <span>#STU-{{ "%04d" % user['id'] }}</span>
+    </div>
+
+    <div class="profile-info-item">
+      <label>Member Since</label>
+      <span>{{ user['created_at']|date_format }}</span>
+    </div>
+  </div>
+
+  <!-- Activity Statistics -->
+  <h4 style="font-size: 1rem; font-weight: 700; color: var(--text-secondary); margin-top: 1.75rem; margin-bottom: 0.75rem; text-align: left;">
+    My Activity Statistics
+  </h4>
+  <div class="profile-stats-grid">
+    <div class="profile-stat-box">
+      <div class="profile-stat-number">{{ stats.lost_count }}</div>
+      <div class="profile-stat-label">👜 Lost Reports</div>
+    </div>
+    <div class="profile-stat-box">
+      <div class="profile-stat-number">{{ stats.found_count }}</div>
+      <div class="profile-stat-label">🔍 Found Reports</div>
+    </div>
+    <div class="profile-stat-box">
+      <div class="profile-stat-number">{{ stats.complaints_count }}</div>
+      <div class="profile-stat-label">🔧 Complaints</div>
+    </div>
+  </div>
+
+  <!-- Action Buttons -->
+  <div class="profile-actions" style="margin-top: 1.5rem; display: flex; gap: 0.75rem; justify-content: center;">
+    <button type="button" class="btn btn-primary" id="openEditProfileBtn">
+      ✏️ Edit Profile Details
+    </button>
+    <a href="{{ url_for('logout') }}" class="btn btn-danger">
+      🚪 Logout
+    </a>
+  </div>
+</div>
+
+<!-- Edit Profile Modal -->
+<div class="modal" id="editProfileModal" style="display: none;">
+  <div class="modal-content" style="max-width: 540px;">
+    <div class="modal-header">
+      <h3>Edit Student Profile</h3>
+      <button class="sidebar-close-btn" id="closeProfileModalBtn">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form method="POST" action="{{ url_for('edit_profile') }}" enctype="multipart/form-data">
+        <div class="form-group">
+          <label for="edit_name" class="form-label">Student Name *</label>
+          <input 
+            type="text" 
+            id="edit_name" 
+            name="name" 
+            class="form-control" 
+            value="{{ user['name'] }}" 
+            required
+          >
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="edit_roll" class="form-label">Roll Number</label>
+            <input 
+              type="text" 
+              id="edit_roll" 
+              name="roll_number" 
+              class="form-control" 
+              value="{{ user['roll_number'] or '' }}" 
+              placeholder="e.g. 22CSE045"
+            >
+          </div>
+
+          <div class="form-group">
+            <label for="edit_branch" class="form-label">Branch / Department</label>
+            <select id="edit_branch" name="branch" class="form-control">
+              <option value="CSE" {% if user['branch'] == 'CSE' %}selected{% endif %}>CSE</option>
+              <option value="IT" {% if user['branch'] == 'IT' %}selected{% endif %}>IT</option>
+              <option value="ECE" {% if user['branch'] == 'ECE' %}selected{% endif %}>ECE</option>
+              <option value="EEE" {% if user['branch'] == 'EEE' %}selected{% endif %}>EEE</option>
+              <option value="Mechanical" {% if user['branch'] == 'Mechanical' %}selected{% endif %}>Mechanical</option>
+              <option value="Civil" {% if user['branch'] == 'Civil' %}selected{% endif %}>Civil</option>
+              <option value="AI & DS" {% if user['branch'] == 'AI & DS' %}selected{% endif %}>AI & DS</option>
+              <option value="AI & ML" {% if user['branch'] == 'AI & ML' %}selected{% endif %}>AI & ML</option>
+              <option value="Other" {% if user['branch'] not in ['CSE','IT','ECE','EEE','Mechanical','Civil','AI & DS','AI & ML'] %}selected{% endif %}>Other</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="edit_year" class="form-label">Academic Year</label>
+            <select id="edit_year" name="year" class="form-control">
+              <option value="1st Year" {% if user['year'] == '1st Year' %}selected{% endif %}>1st Year</option>
+              <option value="2nd Year" {% if user['year'] == '2nd Year' %}selected{% endif %}>2nd Year</option>
+              <option value="3rd Year" {% if user['year'] == '3rd Year' or not user['year'] %}selected{% endif %}>3rd Year</option>
+              <option value="4th Year" {% if user['year'] == '4th Year' %}selected{% endif %}>4th Year</option>
+              <option value="Postgraduate" {% if user['year'] == 'Postgraduate' %}selected{% endif %}>Postgraduate</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="edit_phone" class="form-label">Phone Number</label>
+            <input 
+              type="tel" 
+              id="edit_phone" 
+              name="phone" 
+              class="form-control" 
+              value="{{ user['phone'] if user['phone'] else '' }}" 
+              placeholder="e.g. 9876543210"
+            >
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="new_password" class="form-label">New Password (Leave blank to keep unchanged)</label>
+          <input 
+            type="password" 
+            id="new_password" 
+            name="new_password" 
+            class="form-control" 
+            placeholder="Min 4 characters"
+          >
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Update Profile Picture</label>
+          <input 
+            type="file" 
+            name="profile_pic" 
+            accept="image/*" 
+            class="form-control"
+          >
+        </div>
+
+        <div style="display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1.5rem;">
+          <button type="button" class="btn btn-secondary" id="cancelProfileModalBtn">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const modal = document.getElementById('editProfileModal');
+    const openBtn = document.getElementById('openEditProfileBtn');
+    const closeBtn = document.getElementById('closeProfileModalBtn');
+    const cancelBtn = document.getElementById('cancelProfileModalBtn');
+
+    if (openBtn && modal) {
+      openBtn.addEventListener('click', () => modal.style.display = 'flex');
+      if (closeBtn) closeBtn.addEventListener('click', () => modal.style.display = 'none');
+      if (cancelBtn) cancelBtn.addEventListener('click', () => modal.style.display = 'none');
+      window.addEventListener('click', (e) => {
+        if (e.target === modal) modal.style.display = 'none';
+      });
+    }
+  });
+</script>
+{% endblock %}

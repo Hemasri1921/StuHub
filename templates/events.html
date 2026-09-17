@@ -1,0 +1,321 @@
+{% extends "base.html" %}
+
+{% block title %}StuHub – Campus Events{% endblock %}
+
+{% block content %}
+{% if show_two_options %}
+<!-- ========================================================================= -->
+<!-- 1. PRIMARY SELECTION: TECHNICAL vs NON-TECHNICAL OPTIONS                   -->
+<!-- ========================================================================= -->
+<div class="events-hero-header" style="text-align: center; margin-bottom: 2rem;">
+  <div class="events-header-text" style="max-width: 720px; margin: 0 auto;">
+    <h2><span>🎓</span> Campus Events Portal</h2>
+    <p>Select an event category below to discover technical competitions or cultural activities happening across campus.</p>
+  </div>
+</div>
+
+<div class="two-event-options-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 2rem; margin-bottom: 2.5rem;">
+  <!-- Option 1: TECHNICAL -->
+  <div class="event-stream-card" style="background: var(--card-bg); border: 2px solid #3b82f6; border-radius: 1.25rem; padding: 2.25rem; box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.12); display: flex; flex-direction: column; justify-content: space-between; transition: all 0.2s ease;">
+    <div>
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem;">
+        <div style="width: 60px; height: 60px; border-radius: 1rem; background: #dbeafe; color: #1d4ed8; display: flex; align-items: center; justify-content: center; font-size: 2rem;">
+          💻
+        </div>
+        <span class="badge" style="background: #dbeafe; color: #1e40af; font-size: 0.85rem; padding: 0.35rem 0.85rem; border-radius: 9999px; font-weight: 700;">
+          {{ technical_count }} Events
+        </span>
+      </div>
+
+      <h3 style="font-size: 1.75rem; font-weight: 800; color: #1e3a8a; margin-bottom: 0.75rem; letter-spacing: -0.02em;">TECHNICAL</h3>
+      <p style="color: var(--text-muted); font-size: 1.05rem; line-height: 1.6; margin-bottom: 1.75rem;">
+        Technical competitions, hackathons, coding events, workshops and academic activities.
+      </p>
+
+      <div style="margin-bottom: 1.75rem;">
+        <span style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); display: block; margin-bottom: 0.6rem;">Categories Included:</span>
+        <div style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
+          <span class="subcat-pill">Hackathons</span>
+          <span class="subcat-pill">Coding Competitions</span>
+          <span class="subcat-pill">Technical Quiz</span>
+          <span class="subcat-pill">Workshops</span>
+          <span class="subcat-pill">Project Expo</span>
+          <span class="subcat-pill">Paper Presentation</span>
+          <span class="subcat-pill">Tech Fest</span>
+          <span class="subcat-pill">Seminars</span>
+        </div>
+      </div>
+    </div>
+
+    <a href="{{ url_for('campus_events', category='Technical') }}" class="btn btn-primary btn-block" style="padding: 0.9rem; font-size: 1.05rem; font-weight: 700; text-align: center; border-radius: 0.75rem; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);">
+      View Technical Events &rarr;
+    </a>
+  </div>
+
+  <!-- Option 2: NON-TECHNICAL -->
+  <div class="event-stream-card" style="background: var(--card-bg); border: 2px solid #8b5cf6; border-radius: 1.25rem; padding: 2.25rem; box-shadow: 0 10px 25px -5px rgba(139, 92, 246, 0.12); display: flex; flex-direction: column; justify-content: space-between; transition: all 0.2s ease;">
+    <div>
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem;">
+        <div style="width: 60px; height: 60px; border-radius: 1rem; background: #ede9fe; color: #6d28d9; display: flex; align-items: center; justify-content: center; font-size: 2rem;">
+          🎨
+        </div>
+        <span class="badge" style="background: #ede9fe; color: #5b21b6; font-size: 0.85rem; padding: 0.35rem 0.85rem; border-radius: 9999px; font-weight: 700;">
+          {{ non_technical_count }} Events
+        </span>
+      </div>
+
+      <h3 style="font-size: 1.75rem; font-weight: 800; color: #5b21b6; margin-bottom: 0.75rem; letter-spacing: -0.02em;">NON-TECHNICAL</h3>
+      <p style="color: var(--text-muted); font-size: 1.05rem; line-height: 1.6; margin-bottom: 1.75rem;">
+        Cultural, creative, sports and other student activities.
+      </p>
+
+      <div style="margin-bottom: 1.75rem;">
+        <span style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); display: block; margin-bottom: 0.6rem;">Categories Included:</span>
+        <div style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
+          <span class="subcat-pill">Dancing</span>
+          <span class="subcat-pill">Singing</span>
+          <span class="subcat-pill">Debate</span>
+          <span class="subcat-pill">Photography</span>
+          <span class="subcat-pill">Drawing &amp; Painting</span>
+          <span class="subcat-pill">Cultural Events</span>
+          <span class="subcat-pill">Sports</span>
+          <span class="subcat-pill">College Fest</span>
+          <span class="subcat-pill">Quiz</span>
+          <span class="subcat-pill">Student Activities</span>
+        </div>
+      </div>
+    </div>
+
+    <a href="{{ url_for('campus_events', category='Non-Technical') }}" class="btn btn-secondary btn-block" style="background: #8b5cf6; color: #fff; border: none; padding: 0.9rem; font-size: 1.05rem; font-weight: 700; text-align: center; border-radius: 0.75rem; box-shadow: 0 4px 12px rgba(139, 92, 246, 0.25);">
+      View Non-Technical Events &rarr;
+    </a>
+  </div>
+</div>
+
+<!-- Direct Shortcuts Bar -->
+<div style="display: flex; justify-content: center; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 2rem;">
+  <a href="{{ url_for('events_upcoming') }}" class="btn btn-secondary btn-sm">
+    ⏳ All Upcoming Events
+  </a>
+  <a href="{{ url_for('events_past') }}" class="btn btn-secondary btn-sm">
+    📜 Past Events Archive
+  </a>
+  <a href="{{ url_for('my_event_registrations') }}" class="btn btn-secondary btn-sm">
+    📋 My Registrations
+  </a>
+  {% if session.get('role') == 'admin' %}
+    <a href="{{ url_for('admin_add_event') }}" class="btn btn-primary btn-sm">
+      + Add Event (Admin)
+    </a>
+  {% endif %}
+</div>
+
+{% else %}
+<!-- ========================================================================= -->
+<!-- 2. FILTERED EVENTS DIRECTORY VIEW (Technical, Non-Technical or Search)     -->
+<!-- ========================================================================= -->
+<!-- Top Header -->
+<div class="events-hero-header">
+  <div class="events-header-text">
+    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.35rem;">
+      <a href="{{ url_for('campus_events') }}" style="color: var(--primary-color); font-size: 0.85rem; font-weight: 600;">
+        &larr; Back to Streams
+      </a>
+    </div>
+    <h2>
+      {% if selected_category == 'Technical' %}
+        💻 Technical Events
+      {% elif selected_category == 'Non-Technical' %}
+        🎨 Non-Technical Events
+      {% elif view == 'upcoming' %}
+        ⏳ Upcoming Campus Events
+      {% elif view == 'past' %}
+        📜 Past Events Archive
+      {% else %}
+        🎓 Campus Events Directory
+      {% endif %}
+    </h2>
+    <p>Browse events, check available seats, and register with your student profile.</p>
+  </div>
+  <div class="events-header-actions">
+    <a href="{{ url_for('my_event_registrations') }}" class="btn btn-secondary btn-sm">
+      📋 My Registrations
+    </a>
+    {% if session.get('role') == 'admin' %}
+      <a href="{{ url_for('admin_add_event') }}" class="btn btn-primary btn-sm">
+        + Add Event
+      </a>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Main Stream Tabs (Technical, Non-Technical, All) -->
+<div class="category-tabs-bar" style="margin-bottom: 1.25rem;">
+  <a href="{{ url_for('campus_events', category='Technical', q=query) }}" class="cat-tab-btn {% if selected_category == 'Technical' %}active{% endif %}">
+    💻 Technical
+  </a>
+  <a href="{{ url_for('campus_events', category='Non-Technical', q=query) }}" class="cat-tab-btn {% if selected_category == 'Non-Technical' %}active{% endif %}">
+    🎨 Non-Technical
+  </a>
+  <a href="{{ url_for('campus_events', category='All', q=query) }}" class="cat-tab-btn {% if selected_category == 'All' %}active{% endif %}">
+    🌟 All Categories
+  </a>
+</div>
+
+<!-- Search & Sub-category Filter Controls -->
+<div class="search-controls-card" style="margin-bottom: 1.5rem;">
+  <form method="GET" action="{{ url_for('campus_events') }}" id="eventsFilterForm">
+    <input type="hidden" name="category" value="{{ selected_category or 'All' }}">
+    {% if view %}<input type="hidden" name="view" value="{{ view }}">{% endif %}
+    <div class="search-form-row">
+      <!-- Search Input -->
+      <div>
+        <input 
+          type="text" 
+          name="q" 
+          class="form-control" 
+          placeholder="Search by event name, category, venue..." 
+          value="{{ query }}"
+        >
+      </div>
+
+      <!-- Sub-Category Dropdown -->
+      <div>
+        <select name="sub_category" id="subCategorySelect" class="form-control" onchange="document.getElementById('eventsFilterForm').submit();">
+          <option value="All" {% if not selected_sub_category or selected_sub_category == 'All' %}selected{% endif %}>All Sub-Categories</option>
+          {% for sub in available_sub_categories %}
+            <option value="{{ sub }}" {% if selected_sub_category == sub %}selected{% endif %}>{{ sub }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Submit & Reset Buttons -->
+      <div style="display: flex; gap: 0.5rem;">
+        <button type="submit" class="btn btn-primary">
+          🔍 Search
+        </button>
+        {% if query or (selected_category and selected_category != 'All') or (selected_sub_category and selected_sub_category != 'All') or view %}
+          <a href="{{ url_for('campus_events', category=selected_category) }}" class="btn btn-secondary" title="Reset Filters">
+            Reset
+          </a>
+        {% endif %}
+      </div>
+    </div>
+  </form>
+
+  <!-- Subcategory Quick Pills -->
+  {% if available_sub_categories and available_sub_categories|length > 0 %}
+    <div class="subcat-pills-row" style="margin-top: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;">
+      <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">Filter:</span>
+      <a href="{{ url_for('campus_events', category=selected_category, q=query, view=view) }}" class="subcat-pill {% if not selected_sub_category or selected_sub_category == 'All' %}active{% endif %}">
+        All
+      </a>
+      {% for sub in available_sub_categories %}
+        <a href="{{ url_for('campus_events', category=selected_category, sub_category=sub, q=query, view=view) }}" class="subcat-pill {% if selected_sub_category == sub %}active{% endif %}">
+          {{ sub }}
+        </a>
+      {% endfor %}
+    </div>
+  {% endif %}
+</div>
+
+<!-- Upcoming & Past Events Tabs Bar -->
+<div style="display: flex; gap: 0.75rem; margin-bottom: 1.5rem; border-bottom: 2px solid var(--border-color); padding-bottom: 0.5rem;">
+  <button type="button" class="event-time-tab {% if view != 'past' %}active{% endif %}" id="tabUpcomingBtn" onclick="switchEventTab('upcoming')">
+    ⏳ Upcoming Events ({{ upcoming_events|length }})
+  </button>
+  <button type="button" class="event-time-tab {% if view == 'past' %}active{% endif %}" id="tabPastBtn" onclick="switchEventTab('past')">
+    📜 Past Events ({{ past_events|length }})
+  </button>
+  <button type="button" class="event-time-tab" id="tabAllBtn" onclick="switchEventTab('all')">
+    🌐 All Events ({{ events|length }})
+  </button>
+</div>
+
+<!-- Events Grid Container -->
+<div class="events-grid-wrapper">
+  <!-- UPCOMING EVENTS VIEW -->
+  <div id="viewUpcoming" class="event-tab-view" style="display: {% if view == 'past' %}none{% else %}block{% endif %};">
+    {% if upcoming_events and upcoming_events|length > 0 %}
+      <div class="events-grid event-grid">
+        {% for evt in upcoming_events %}
+          {% include 'includes_event_card.html' %}
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <div class="empty-state-icon">🎓</div>
+        <h4>No Upcoming Events Matching Criteria</h4>
+        <p>New events will appear here once announced by campus organizers.</p>
+        <a href="{{ url_for('campus_events', category=selected_category) }}" class="btn btn-secondary btn-sm" style="margin-top: 0.75rem;">Clear Filter</a>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- PAST EVENTS VIEW -->
+  <div id="viewPast" class="event-tab-view" style="display: {% if view == 'past' %}block{% else %}none{% endif %};">
+    {% if past_events and past_events|length > 0 %}
+      <div class="events-grid event-grid">
+        {% for evt in past_events %}
+          {% include 'includes_event_card.html' %}
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <div class="empty-state-icon">📜</div>
+        <h4>No Past Events Found</h4>
+        <p>Past campus activities and completed competitions will be archived here.</p>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- ALL EVENTS VIEW -->
+  <div id="viewAll" class="event-tab-view" style="display: none;">
+    {% if events and events|length > 0 %}
+      <div class="events-grid event-grid">
+        {% for evt in events %}
+          {% include 'includes_event_card.html' %}
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <div class="empty-state-icon">🔍</div>
+        <h4>No Events Found</h4>
+        <p>No events match your current search and filter settings.</p>
+        <a href="{{ url_for('campus_events', category=selected_category) }}" class="btn btn-secondary btn-sm" style="margin-top: 0.75rem;">Reset All</a>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+  function switchEventTab(tab) {
+    const tabUpcoming = document.getElementById('tabUpcomingBtn');
+    const tabPast = document.getElementById('tabPastBtn');
+    const tabAll = document.getElementById('tabAllBtn');
+
+    const viewUpcoming = document.getElementById('viewUpcoming');
+    const viewPast = document.getElementById('viewPast');
+    const viewAll = document.getElementById('viewAll');
+
+    if (!tabUpcoming || !viewUpcoming) return;
+
+    [tabUpcoming, tabPast, tabAll].forEach(b => b && b.classList.remove('active'));
+    [viewUpcoming, viewPast, viewAll].forEach(v => v && (v.style.display = 'none'));
+
+    if (tab === 'upcoming') {
+      tabUpcoming.classList.add('active');
+      viewUpcoming.style.display = 'block';
+    } else if (tab === 'past') {
+      tabPast.classList.add('active');
+      viewPast.style.display = 'block';
+    } else if (tab === 'all') {
+      tabAll.classList.add('active');
+      viewAll.style.display = 'block';
+    }
+  }
+</script>
+{% endblock %}

@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block title %}STUHUB – Campus Announcements Portal{% endblock %}
+
+{% block content %}
+<!-- Top Header: ANNOUNCEMENTS PORTAL -->
+<div class="admin-hero-banner" style="background: linear-gradient(135deg, #064e3b 0%, #0f172a 100%); color: #ffffff; padding: 2.25rem; border-radius: 14px; margin-bottom: 2rem; box-shadow: 0 4px 18px rgba(6, 78, 59, 0.25);">
+  <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1.5rem;">
+    <div>
+      <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.5rem;">
+        <span style="display: inline-block; background: rgba(16, 185, 129, 0.25); color: #6ee7b7; font-size: 0.78rem; font-weight: 800; letter-spacing: 1.5px; padding: 0.25rem 0.7rem; border-radius: 4px; text-transform: uppercase;">
+          CAMPUS ADMINISTRATION
+        </span>
+        <a href="{{ url_for('admin') }}" style="color: #94a3b8; font-size: 0.85rem; text-decoration: none; font-weight: 600;">
+          &larr; Admin Home
+        </a>
+      </div>
+      <h1 style="font-size: 2.2rem; font-weight: 850; margin: 0 0 0.35rem 0; color: #ffffff; letter-spacing: -0.5px;">
+        📢 Campus Announcements Portal
+      </h1>
+      <p style="font-size: 1.05rem; color: #cbd5e1; margin: 0; max-width: 700px;">
+        Broadcast official circulars, exam schedules, academic notices, and urgent alerts directly to all enrolled students.
+      </p>
+    </div>
+
+    <div style="display: flex; gap: 0.85rem; align-items: center; flex-wrap: wrap;">
+      <a href="{{ url_for('announcements') }}" target="_blank" class="btn btn-secondary btn-sm" style="background: rgba(255,255,255,0.12); color: #fff; border-color: rgba(255,255,255,0.25); font-weight: 600;">
+        Public Bulletin Board ↗
+      </a>
+      <a href="#post-form" class="btn btn-primary btn-sm" style="background: #10b981; border-color: #10b981; font-weight: 700;">
+        + Post New Announcement
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION 1: POST NEW ANNOUNCEMENT -->
+<div id="post-form" class="section-header" style="margin-top: 1.5rem; margin-bottom: 1.25rem;">
+  <h3><span>✍️</span> Publish Campus Announcement</h3>
+</div>
+
+<div class="form-container" style="max-width: 100%; margin-bottom: 2.5rem; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.75rem;">
+  <form method="POST" action="{{ url_for('add_announcement') }}">
+    <div class="form-row">
+      <div class="form-group" style="flex: 2;">
+        <label class="form-label" for="ann_title">Announcement Title *</label>
+        <input 
+          type="text" 
+          id="ann_title" 
+          name="title" 
+          class="form-control" 
+          placeholder="e.g. Mid-Term Examination Timetable & Seating Plan Released" 
+          required
+        >
+      </div>
+
+      <div class="form-group" style="flex: 1;">
+        <label class="form-label" for="ann_posted_by">Posted By / Office</label>
+        <input 
+          type="text" 
+          id="ann_posted_by" 
+          name="posted_by" 
+          class="form-control" 
+          value="Campus Administration" 
+          required
+        >
+      </div>
+
+      <div class="form-group" style="flex: 1;">
+        <label class="form-label" for="ann_priority">Priority</label>
+        <select id="ann_priority" name="priority" class="form-control">
+          <option value="Normal">Normal</option>
+          <option value="Important">Important / Urgent</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="ann_desc">Announcement Details &amp; Message *</label>
+      <textarea 
+        id="ann_desc" 
+        name="description" 
+        class="form-control" 
+        rows="4" 
+        placeholder="Provide complete details for students. Publishing this broadcasts an in-app notification to all students." 
+        required
+      ></textarea>
+    </div>
+
+    <div style="display: flex; justify-content: flex-end;">
+      <button type="submit" class="btn btn-primary" style="background: #059669; border-color: #059669; font-weight: 700; padding: 0.65rem 1.5rem;">
+        📢 Publish &amp; Broadcast to All Students
+      </button>
+    </div>
+  </form>
+</div>
+
+<!-- SECTION 2: PUBLISHED ANNOUNCEMENTS TABLE -->
+<div class="section-header" style="margin-top: 2rem; margin-bottom: 1.25rem;">
+  <h3><span>📋</span> Published Announcements ({{ announcements|length }})</h3>
+</div>
+
+<div class="admin-table-wrapper">
+  {% if announcements and announcements|length > 0 %}
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th style="width: 70px;">ID</th>
+          <th style="min-width: 220px;">Title</th>
+          <th>Office / Posted By</th>
+          <th>Priority</th>
+          <th style="min-width: 280px;">Message Preview</th>
+          <th>Date Posted</th>
+          <th style="text-align: center; width: 80px;">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for a in announcements %}
+          <tr>
+            <td><strong>#{{ a.id }}</strong></td>
+            <td>
+              <strong style="color: var(--text-primary);">{{ a.title }}</strong>
+            </td>
+            <td>
+              <span class="badge" style="background: #f1f5f9; color: #1e293b;">{{ a.posted_by }}</span>
+            </td>
+            <td>
+              {% if a.priority == 'Important' or a.is_important %}
+                <span class="badge" style="background: #fee2e2; color: #dc2626; font-weight: 700;">Important</span>
+              {% else %}
+                <span class="badge" style="background: #e0f2fe; color: #0284c7;">Normal</span>
+              {% endif %}
+            </td>
+            <td style="font-size: 0.88rem; color: var(--text-secondary); max-width: 320px;">
+              {{ a.description }}
+            </td>
+            <td style="font-size: 0.82rem; color: var(--text-muted); white-space: nowrap;">
+              {{ a.created_at|date_format if a.created_at else 'Recent' }}
+            </td>
+            <td style="text-align: center;">
+              <form method="POST" action="{{ url_for('delete_item', item_type='announcement', item_id=a.id) }}" onsubmit="return confirm('Delete this announcement?');" style="display: inline;">
+                <button type="submit" class="btn btn-secondary btn-sm" style="color: var(--danger); padding: 0.35rem 0.6rem;" title="Delete announcement">
+                  🗑️
+                </button>
+              </form>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <div style="padding: 3rem; text-align: center; color: var(--text-muted); background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border-color);">
+      <span style="font-size: 2.5rem; display: block; margin-bottom: 0.5rem;">📢</span>
+      <h4 style="margin: 0 0 0.5rem 0; color: var(--text-primary);">No Announcements Published Yet</h4>
+      <p style="margin: 0;">Use the form above to broadcast official notifications to students.</p>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

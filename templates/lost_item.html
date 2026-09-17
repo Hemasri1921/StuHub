@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}StuHub – Report Lost Item{% endblock %}
+
+{% block content %}
+<div class="form-container">
+  <div class="form-header">
+    <h2><span>👜</span> Report a Lost Item</h2>
+    <p>Provide details of the lost item to help campus security and fellow students return it to you.</p>
+  </div>
+
+  <form method="POST" action="{{ url_for('report_lost_item') }}" enctype="multipart/form-data">
+    <div class="form-group">
+      <label for="item_name" class="form-label">Item Name *</label>
+      <input 
+        type="text" 
+        id="item_name" 
+        name="item_name" 
+        class="form-control" 
+        placeholder="e.g. Casio fx-991EX Calculator, Blue Water Bottle" 
+        required 
+        autofocus
+      >
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="category" class="form-label">Category *</label>
+        <select id="category" name="category" class="form-control" required>
+          <option value="">Select a Category</option>
+          {% for cat in categories %}
+            <option value="{{ cat }}">{{ cat }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="date" class="form-label">Date Lost *</label>
+        <input 
+          type="date" 
+          id="date" 
+          name="date" 
+          class="form-control" 
+          required
+        >
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="location" class="form-label">Last Seen Location *</label>
+      <input 
+        type="text" 
+        id="location" 
+        name="location" 
+        class="form-control" 
+        placeholder="e.g. Central Library 2nd Floor, Desk 14 or Canteen" 
+        required
+      >
+    </div>
+
+    <div class="form-group">
+      <label for="description" class="form-label">Detailed Description</label>
+      <textarea 
+        id="description" 
+        name="description" 
+        class="form-control" 
+        rows="3" 
+        placeholder="Color, brand, identifying marks, stickers, initial initials carved, etc."
+      ></textarea>
+    </div>
+
+    <div class="form-group">
+      <label for="contact_details" class="form-label">Contact Details *</label>
+      <input 
+        type="text" 
+        id="contact_details" 
+        name="contact_details" 
+        class="form-control" 
+        placeholder="e.g. your_email@stuhub.edu / +91 9876543210" 
+        required
+      >
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Upload Item Photo (Optional)</label>
+      <div class="file-upload-box" onclick="document.getElementById('photoInput').click()">
+        <span style="font-size: 2rem;">📷</span>
+        <p style="font-size: 0.9rem; color: var(--text-muted); margin-top: 0.25rem;">
+          Click here to select an image from your device
+        </p>
+        <input 
+          type="file" 
+          id="photoInput" 
+          name="photo" 
+          accept="image/*" 
+          style="display: none;" 
+          data-preview-id="photoPreview"
+        >
+      </div>
+      <img id="photoPreview" class="file-preview" alt="Selected Item Preview">
+    </div>
+
+    <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+      <button type="submit" class="btn btn-primary" style="flex: 1;">
+        Submit Lost Item Report
+      </button>
+      <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
+        Cancel
+      </a>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Set today's date as default
+  document.getElementById('date').value = new Date().toISOString().split('T')[0];
+</script>
+{% endblock %}

@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+
+{% block title %}StuHub – Student Dashboard{% endblock %}
+
+{% block content %}
+<!-- Welcome Header Banner -->
+<div class="dashboard-welcome">
+  <div>
+    <h1>Welcome back, {{ session.get('user_name') }}! 👋</h1>
+    <p>Your centralized campus student portal for issues, belongings, circulars &amp; events.</p>
+  </div>
+  <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+    <a href="{{ url_for('campus_events') }}" class="btn btn-secondary btn-sm" style="background: rgba(255,255,255,0.2); color:#fff; border-color: rgba(255,255,255,0.4);">
+      🎓 Browse Events
+    </a>
+    <a href="{{ url_for('search') }}" class="btn btn-secondary btn-sm" style="background: rgba(255,255,255,0.2); color:#fff; border-color: rgba(255,255,255,0.4);">
+      🔍 Search Items
+    </a>
+  </div>
+</div>
+
+<!-- Stats Counter Row -->
+<div class="stats-row">
+  <div class="stat-box">
+    <div class="stat-icon amber">🔧</div>
+    <div class="stat-data">
+      <h4>{{ my_complaints_count }}</h4>
+      <span>Complaints Raised</span>
+    </div>
+  </div>
+
+  <div class="stat-box">
+    <div class="stat-icon blue">👜</div>
+    <div class="stat-data">
+      <h4>{{ my_lost_count + my_found_count }}</h4>
+      <span>Lost &amp; Found Items</span>
+    </div>
+  </div>
+
+  <div class="stat-box">
+    <div class="stat-icon purple">📢</div>
+    <div class="stat-data">
+      <h4>{{ total_announcements }}</h4>
+      <span>Official Notices</span>
+    </div>
+  </div>
+
+  <div class="stat-box">
+    <div class="stat-icon green">🎟️</div>
+    <div class="stat-data">
+      <h4>{{ my_registrations_count|default(0) }}</h4>
+      <span>My Registrations</span>
+    </div>
+  </div>
+</div>
+
+<!-- Four Main Feature Cards -->
+<div class="section-header" style="margin-top: 1.5rem;">
+  <h3><span>⚡</span> Four Main Campus Services</h3>
+</div>
+
+<div class="action-cards-grid">
+  <!-- Card 1: LOST & FOUND ITEMS -->
+  <div class="action-card">
+    <div style="height: 140px; border-radius: 8px 8px 0 0; overflow: hidden; margin: -1.75rem -1.75rem 1.25rem -1.75rem; background: #e0f2fe;">
+      <img 
+        src="{{ url_for('static', filename='images/lost-found.jpg') }}" 
+        alt="Lost &amp; Found Items" 
+        style="width: 100%; height: 100%; object-fit: cover;"
+        onerror="this.style.display='none';"
+      >
+    </div>
+    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+      <span style="font-size: 1.3rem;">👜</span>
+      <h3 style="margin: 0;">LOST &amp; FOUND ITEMS</h3>
+    </div>
+    <p>Misplaced personal items or discovered someone else's belongings? Log reports with photos or search the campus registry.</p>
+    <div class="action-card-links">
+      <a href="{{ url_for('report_lost_item') }}" class="btn btn-primary btn-sm">Report Lost</a>
+      <a href="{{ url_for('report_found_item') }}" class="btn btn-secondary btn-sm">Report Found</a>
+      <a href="{{ url_for('search') }}" class="btn btn-secondary btn-sm">Search Items</a>
+    </div>
+  </div>
+
+  <!-- Card 2: COMPLAINTS RAISE -->
+  <div class="action-card">
+    <div style="height: 140px; border-radius: 8px 8px 0 0; overflow: hidden; margin: -1.75rem -1.75rem 1.25rem -1.75rem; background: #fef3c7;">
+      <img 
+        src="{{ url_for('static', filename='images/complaints.jpg') }}" 
+        alt="Complaints Raise" 
+        style="width: 100%; height: 100%; object-fit: cover;"
+        onerror="this.style.display='none';"
+      >
+    </div>
+    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+      <span style="font-size: 1.3rem;">🔧</span>
+      <h3 style="margin: 0;">COMPLAINTS RAISE</h3>
+    </div>
+    <p>Report campus infrastructure, cleanliness, water, electrical or classroom issues with live camera/photos and track resolution.</p>
+    <div class="action-card-links">
+      <a href="{{ url_for('complaints') }}" class="btn btn-primary btn-sm">Raise Complaint</a>
+      <a href="{{ url_for('my_complaints') }}" class="btn btn-secondary btn-sm">My Complaints</a>
+    </div>
+  </div>
+
+  <!-- Card 3: CAMPUS EVENTS -->
+  <div class="action-card">
+    <div style="height: 140px; border-radius: 8px 8px 0 0; overflow: hidden; margin: -1.75rem -1.75rem 1.25rem -1.75rem; background: #ede9fe;">
+      <img 
+        src="{{ url_for('static', filename='images/campus-events.jpg') }}" 
+        alt="Campus Events" 
+        style="width: 100%; height: 100%; object-fit: cover;"
+        onerror="this.style.display='none';"
+      >
+    </div>
+    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+      <span style="font-size: 1.3rem;">🎓</span>
+      <h3 style="margin: 0;">CAMPUS EVENTS</h3>
+    </div>
+    <p>Discover Technical &amp; Non-Technical competitions, hackathons, cultural fests and sports with instant digital passes.</p>
+    <div class="action-card-links">
+      <a href="{{ url_for('campus_events') }}" class="btn btn-primary btn-sm">Campus Events</a>
+      <a href="{{ url_for('my_event_registrations') }}" class="btn btn-secondary btn-sm">My Registrations</a>
+    </div>
+  </div>
+
+  <!-- Card 4: ANNOUNCEMENTS -->
+  <div class="action-card">
+    <div style="height: 140px; border-radius: 8px 8px 0 0; overflow: hidden; margin: -1.75rem -1.75rem 1.25rem -1.75rem; background: #d1fae5;">
+      <img 
+        src="{{ url_for('static', filename='images/announcements.jpg') }}" 
+        alt="Announcements" 
+        style="width: 100%; height: 100%; object-fit: cover;"
+        onerror="this.style.display='none';"
+      >
+    </div>
+    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+      <span style="font-size: 1.3rem;">📢</span>
+      <h3 style="margin: 0;">ANNOUNCEMENTS</h3>
+    </div>
+    <p>Official university notices, internal exam circulars, academic schedules, holiday notices and administrative orders.</p>
+    <div class="action-card-links">
+      <a href="{{ url_for('announcements') }}" class="btn btn-primary btn-sm">Announcements</a>
+    </div>
+  </div>
+</div>
+
+<!-- JUST YOUR ACTIVITY Full-Width Section -->
+<div class="dashboard-col-card" style="margin-top: 2rem;">
+  <div class="section-header">
+    <div>
+      <h3><span>🕒</span> JUST YOUR ACTIVITY</h3>
+      <p style="color: var(--text-muted); font-size: 0.85rem;">Only your personal submissions, complaints, and event registrations</p>
+    </div>
+    {% if your_activity and your_activity|length > 0 %}
+      <span class="badge" style="background-color: var(--primary-light); color: var(--primary); font-weight: 700; padding: 0.35rem 0.75rem; border-radius: 9999px;">
+        {{ your_activity|length }} Personal Activities
+      </span>
+    {% endif %}
+  </div>
+
+  {% if your_activity and your_activity|length > 0 %}
+    <div class="activity-list">
+      {% for item in your_activity %}
+        <div class="activity-item">
+          <div class="activity-icon">{{ item.icon }}</div>
+          <div class="activity-body">
+            <div class="activity-top">
+              <span class="activity-title" style="font-weight: 600;">{{ item.title }}</span>
+              <span class="activity-time">{{ item.date|datetime_format }}</span>
+            </div>
+            <div class="activity-detail" style="color: var(--text-muted); font-size: 0.85rem;">{{ item.detail }}</div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty-state">
+      <div class="empty-state-icon">📋</div>
+      <h4>No Personal Activity Yet</h4>
+      <p>Your reported lost/found items, raised complaints, and registered events will appear here.</p>
+    </div>
+  {% endif %}
+</div>
+
+{% endblock %}
+

@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}StuHub – Search Lost &amp; Found Items{% endblock %}
+
+{% block content %}
+<div class="search-controls-card">
+  <div class="section-header" style="border: none; margin-bottom: 1rem; padding-bottom: 0;">
+    <h3><span>🔍</span> Search Campus Lost &amp; Found Directory</h3>
+  </div>
+
+  <form method="GET" action="{{ url_for('search') }}">
+    <div class="search-form-row">
+      <!-- Keyword search -->
+      <div>
+        <input 
+          type="text" 
+          name="q" 
+          class="form-control" 
+          placeholder="Search by item name, keyword, or location..." 
+          value="{{ query }}"
+        >
+      </div>
+
+      <!-- Category Filter -->
+      <div>
+        <select name="category" class="form-control">
+          {% for cat in categories %}
+            <option value="{{ cat }}" {% if selected_category == cat %}selected{% endif %}>
+              Category: {{ cat }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Type Filter -->
+      <div>
+        <select name="type" class="form-control">
+          <option value="all" {% if selected_type == 'all' %}selected{% endif %}>All Types</option>
+          <option value="lost" {% if selected_type == 'lost' %}selected{% endif %}>Lost Items Only</option>
+          <option value="found" {% if selected_type == 'found' %}selected{% endif %}>Found Items Only</option>
+        </select>
+      </div>
+
+      <!-- Submit & Reset -->
+      <div style="display: flex; gap: 0.5rem;">
+        <button type="submit" class="btn btn-primary">
+          Filter
+        </button>
+        {% if query or (selected_category and selected_category != 'All') or selected_type != 'all' %}
+          <a href="{{ url_for('search') }}" class="btn btn-secondary" title="Reset Filters">
+            ✕ Clear
+          </a>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Quick pills for item type -->
+    <div class="type-filter-pills">
+      <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); align-self: center; margin-right: 0.5rem;">Quick View:</span>
+      <a href="{{ url_for('search', type='all', q=query, category=selected_category) }}" class="type-pill {% if selected_type == 'all' %}active{% endif %}">
+        All Items
+      </a>
+      <a href="{{ url_for('search', type='lost', q=query, category=selected_category) }}" class="type-pill {% if selected_type == 'lost' %}active{% endif %}">
+        👜 Lost Items
+      </a>
+      <a href="{{ url_for('search', type='found', q=query, category=selected_category) }}" class="type-pill {% if selected_type == 'found' %}active{% endif %}">
+        🔍 Found Items
+      </a>
+    </div>
+  </form>
+</div>
+
+<!-- Results Grid -->
+<div style="margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
+  <h4 style="font-size: 1.05rem; font-weight: 700; color: var(--text-secondary);">
+    Results ({{ items|length }})
+  </h4>
+  <div style="display: flex; gap: 0.5rem;">
+    <a href="{{ url_for('report_lost_item') }}" class="btn btn-secondary btn-sm">+ Report Lost</a>
+    <a href="{{ url_for('report_found_item') }}" class="btn btn-secondary btn-sm">+ Report Found</a>
+  </div>
+</div>
+
+{% if items and items|length > 0 %}
+  <div class="items-grid">
+    {% for item in items %}
+      <div class="item-card">
+        <div class="item-image-wrapper">
+          {% if item.photo %}
+            <img 
+              src="{{ url_for('static', filename='uploads/' + item.photo) }}" 
+              alt="{{ item.item_name }}" 
+              class="item-image" 
+              onerror="this.onerror=null; this.src='{{ url_for('static', filename='uploads/no_photo_placeholder.jpg') }}';"
+            >
+          {% else %}
+            <img 
+              src="{{ url_for('static', filename='uploads/no_photo_placeholder.jpg') }}" 
+              alt="No photo available" 
+              class="item-image"
+            >
+          {% endif %}
+          <span class="item-type-badge {{ item.item_type|lower }}">
+            {{ item.item_type }}
+          </span>
+        </div>
+
+        <div class="item-content">
+          <span class="item-category-tag">{{ item.category }}</span>
+          <h3 class="item-title">{{ item.item_name }}</h3>
+          
+          {% if item.description %}
+            <p class="item-description">{{ item.description }}</p>
+          {% else %}
+            <p class="item-description" style="color: var(--text-light); font-style: italic;">No description provided.</p>
+          {% endif %}
+
+          <div class="item-meta-list">
+            <div class="item-meta-item">
+              <span>📍</span> <strong>Location:</strong> {{ item.location }}
+            </div>
+            <div class="item-meta-item">
+              <span>📅</span> <strong>Date:</strong> {{ item.date }}
+            </div>
+            <div class="item-meta-item">
+              <span>📞</span> <strong>Contact:</strong> {{ item.contact_details }}
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="empty-state">
+    <div class="empty-state-icon">🔎</div>
+    <h4>No Matching Items Found</h4>
+    <p>Try refining your search terms or clearing selected category filters.</p>
+    <a href="{{ url_for('search') }}" class="btn btn-secondary btn-sm" style="margin-top: 1rem;">View All Items</a>
+  </div>
+{% endif %}
+{% endblock %}

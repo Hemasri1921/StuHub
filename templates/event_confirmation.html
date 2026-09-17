@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}StuHub – Registration Confirmed{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper" style="max-width: 600px;">
+  <div class="auth-card" style="text-align: center; border-top: 5px solid var(--success);">
+    <!-- Success Icon & Header -->
+    <div style="font-size: 3.5rem; margin-bottom: 0.5rem; line-height: 1;">
+      🎉
+    </div>
+    <h2 style="font-size: 1.85rem; color: #047857; margin-bottom: 0.25rem;">
+      Registration Confirmed
+    </h2>
+    <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1.75rem;">
+      Your seat for the event has been successfully reserved.
+    </p>
+
+    <!-- Ticket Pass / Receipt Card -->
+    <div class="registration-receipt-card">
+      <div class="receipt-header">
+        <span class="brand-badge">StuHub Event Pass</span>
+        <span class="badge badge-resolved">{{ reg.registration_status }}</span>
+      </div>
+
+      <h3 class="receipt-event-title">{{ reg.event_title }}</h3>
+
+      <div class="receipt-grid">
+        <div class="receipt-item">
+          <label>Registration ID</label>
+          <span style="font-family: monospace; font-size: 1.05rem; color: var(--primary); font-weight: 800;">
+            {{ reg.registration_id }}
+          </span>
+        </div>
+
+        <div class="receipt-item">
+          <label>Student Name</label>
+          <span><strong>{{ reg.student_name }}</strong></span>
+        </div>
+
+        <div class="receipt-item">
+          <label>Roll Number</label>
+          <span>{{ reg.roll_number }}</span>
+        </div>
+
+        <div class="receipt-item">
+          <label>Branch &amp; Year</label>
+          <span>{{ reg.branch }} ({{ reg.year }})</span>
+        </div>
+
+        <div class="receipt-item">
+          <label>Event Date</label>
+          <span>📅 {{ reg.event_date }}</span>
+        </div>
+
+        <div class="receipt-item">
+          <label>Venue</label>
+          <span>📍 {{ reg.venue }}</span>
+        </div>
+
+        <div class="receipt-item">
+          <label>Payment Status</label>
+          <span style="font-weight: 700; color: #047857;">
+            {{ reg.payment_status }}
+          </span>
+        </div>
+
+        <div class="receipt-item">
+          <label>Registration Status</label>
+          <span style="font-weight: 700; color: #047857;">
+            {{ reg.registration_status }}
+          </span>
+        </div>
+      </div>
+
+      <div class="receipt-footer">
+        <small style="color: var(--text-muted);">
+          Please present this digital pass or Registration ID at the venue entrance.
+        </small>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div style="display: flex; gap: 0.85rem; justify-content: center; margin-top: 1.75rem; flex-wrap: wrap;">
+      <a href="{{ url_for('campus_events') }}" class="btn btn-primary">
+        Back to Events &rarr;
+      </a>
+      <a href="{{ url_for('my_event_registrations') }}" class="btn btn-secondary">
+        📋 View My Registrations
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

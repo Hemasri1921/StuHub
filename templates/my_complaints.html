@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}StuHub – My Complaints{% endblock %}
+
+{% block content %}
+<div class="section-header">
+  <div>
+    <h2><span>📋</span> My Campus Complaints</h2>
+    <p style="color: var(--text-muted); font-size: 0.92rem;">Track resolution progress of your reported campus maintenance issues.</p>
+  </div>
+  <div>
+    <a href="{{ url_for('complaints') }}" class="btn btn-primary btn-sm">
+      + New Complaint
+    </a>
+  </div>
+</div>
+
+{% if complaints and complaints|length > 0 %}
+  <div class="complaints-list">
+    {% for c in complaints %}
+      <div class="complaint-card">
+        {% if c.photo %}
+          <img 
+            src="{{ url_for('static', filename='uploads/' + c.photo) }}" 
+            alt="{{ c.category }} complaint" 
+            class="complaint-photo" 
+            onerror="this.onerror=null; this.src='{{ url_for('static', filename='uploads/no_photo_placeholder.jpg') }}';"
+          >
+        {% else %}
+          <img 
+            src="{{ url_for('static', filename='uploads/no_photo_placeholder.jpg') }}" 
+            alt="No Photo Available" 
+            class="complaint-photo"
+          >
+        {% endif %}
+
+        <div class="complaint-body">
+          <div class="complaint-top">
+            <h3 class="complaint-category">{{ c.category }} Maintenance Issue</h3>
+            
+            {% if c.status == 'Pending' %}
+              <span class="badge badge-pending">⏳ Pending Review</span>
+            {% elif c.status == 'In Progress' %}
+              <span class="badge badge-in-progress">⚙️ In Progress</span>
+            {% elif c.status == 'Resolved' %}
+              <span class="badge badge-resolved">✅ Resolved</span>
+            {% else %}
+              <span class="badge">{{ c.status }}</span>
+            {% endif %}
+          </div>
+
+          <p class="complaint-desc">{{ c.description }}</p>
+
+          <div class="complaint-meta">
+            <span>📍 <strong>Location:</strong> {{ c.location }}</span>
+            <span>📅 <strong>Reported On:</strong> {{ c.created_at|date_format }}</span>
+            <span>🆔 <strong>Ticket:</strong> #CMP-{{ c.id }}</span>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="empty-state">
+    <div class="empty-state-icon">🎉</div>
+    <h4>No Complaints Filed</h4>
+    <p>You haven't submitted any complaints yet. All campus facilities seem to be working smoothly!</p>
+    <a href="{{ url_for('complaints') }}" class="btn btn-primary btn-sm" style="margin-top: 1rem;">
+      Report an Issue
+    </a>
+  </div>
+{% endif %}
+{% endblock %}

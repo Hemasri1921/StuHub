@@ -1,0 +1,363 @@
+{% extends "base.html" %}
+
+{% block title %}StuHub Admin – {% if event %}Edit Event{% else %}Add Campus Event{% endif %}{% endblock %}
+
+{% block content %}
+<div class="form-container" style="max-width: 820px;">
+  <!-- Back Button -->
+  <div style="margin-bottom: 1.25rem;">
+    <a href="{{ url_for('admin_events_portal') }}" class="btn btn-secondary btn-sm">
+      &larr; Back to Events Portal
+    </a>
+  </div>
+
+  <div class="form-header">
+    <h2>
+      <span>🎓</span> {% if event %}Edit Campus Event: {{ event.title }}{% else %}Add New Campus Event{% endif %}
+    </h2>
+    <p>Fill in complete event specifications, seat limits, and contact details for student registrations.</p>
+  </div>
+
+  <form method="POST" action="{% if event %}{{ url_for('admin_edit_event', event_id=event.id) }}{% else %}{{ url_for('admin_add_event') }}{% endif %}" enctype="multipart/form-data">
+    
+    <!-- 1. Event Name -->
+    <div class="form-group">
+      <label for="title" class="form-label">Event Name *</label>
+      <input 
+        type="text" 
+        id="title" 
+        name="title" 
+        class="form-control" 
+        value="{{ event.title if event else '' }}" 
+        placeholder="e.g. AI Innovation Hackathon 2026" 
+        required 
+        autofocus
+      >
+    </div>
+
+    <!-- 2. Main Category & Sub-Category -->
+    <div class="form-row">
+      <div class="form-group">
+        <label for="adminMainCategory" class="form-label">Event Type *</label>
+        <select id="adminMainCategory" name="main_category" class="form-control" required>
+          <option value="">Select Event Type</option>
+          <option value="Technical" {% if event and event.main_category == 'Technical' %}selected{% endif %}>Technical</option>
+          <option value="Non-Technical" {% if event and event.main_category == 'Non-Technical' %}selected{% endif %}>Non-Technical</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="adminSubCategory" class="form-label">Category *</label>
+        <select id="adminSubCategory" name="sub_category" class="form-control" required>
+          <option value="">Select Category</option>
+          {% if event %}
+            <option value="{{ event.sub_category }}" selected>{{ event.sub_category }}</option>
+          {% endif %}
+        </select>
+      </div>
+    </div>
+
+    <!-- 3. Description -->
+    <div class="form-group">
+      <label for="description" class="form-label">Event Description &amp; Highlights *</label>
+      <textarea 
+        id="description" 
+        name="description" 
+        class="form-control" 
+        rows="4" 
+        placeholder="Detailed schedule, problem statement, rules, awards, and agenda..." 
+        required
+      >{{ event.description if event else '' }}</textarea>
+    </div>
+
+    <!-- 4. Date & Time -->
+    <div class="form-row">
+      <div class="form-group">
+        <label for="event_date" class="form-label">Event Date *</label>
+        <input 
+          type="date" 
+          id="event_date" 
+          name="event_date" 
+          class="form-control" 
+          value="{{ event.event_date if event else '' }}" 
+          required
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="event_time" class="form-label">Event Time *</label>
+        <input 
+          type="text" 
+          id="event_time" 
+          name="event_time" 
+          class="form-control" 
+          value="{{ event.event_time if event else '' }}" 
+          placeholder="e.g. 09:30 AM - 04:30 PM" 
+          required
+        >
+      </div>
+    </div>
+
+    <!-- 5. Venue & Organized By -->
+    <div class="form-row">
+      <div class="form-group">
+        <label for="venue" class="form-label">Campus Venue / Location *</label>
+        <input 
+          type="text" 
+          id="venue" 
+          name="venue" 
+          class="form-control" 
+          value="{{ event.venue if event else '' }}" 
+          placeholder="e.g. Auditorium, Lab 3, Open Air Theatre" 
+          required
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="organized_by" class="form-label">Organized By / Club / Dept *</label>
+        <input 
+          type="text" 
+          id="organized_by" 
+          name="organized_by" 
+          class="form-control" 
+          value="{{ event.organized_by if event else '' }}" 
+          placeholder="e.g. CSE Dept &amp; Robotics Club" 
+          required
+        >
+      </div>
+    </div>
+
+    <!-- 6. Eligibility & Registration Window -->
+    <div class="form-row">
+      <div class="form-group">
+        <label for="eligibility" class="form-label">Eligibility Criteria</label>
+        <input 
+          type="text" 
+          id="eligibility" 
+          name="eligibility" 
+          class="form-control" 
+          value="{{ event.eligibility if event else 'Open to all students' }}" 
+          placeholder="e.g. Open to all students, 2nd &amp; 3rd year only"
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="reg_start_date" class="form-label">Registration Start Date</label>
+        <input 
+          type="date" 
+          id="reg_start_date" 
+          name="reg_start_date" 
+          class="form-control" 
+          value="{{ event.reg_start_date if event else '' }}"
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="reg_end_date" class="form-label">Registration Last Date</label>
+        <input 
+          type="date" 
+          id="reg_end_date" 
+          name="reg_end_date" 
+          class="form-control" 
+          value="{{ event.reg_end_date if event else '' }}"
+        >
+      </div>
+    </div>
+
+    <!-- 7. Seats, Fee & Status -->
+    <div class="form-row">
+      <div class="form-group">
+        <label for="total_seats" class="form-label">Total Number of Seats *</label>
+        <input 
+          type="number" 
+          id="total_seats" 
+          name="total_seats" 
+          class="form-control" 
+          value="{{ event.total_seats if event else 100 }}" 
+          min="1" 
+          required
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="fee" class="form-label">Registration Fee (₹) * (0 for Free)</label>
+        <input 
+          type="number" 
+          id="fee" 
+          name="fee" 
+          class="form-control" 
+          value="{{ event.fee if event else 0 }}" 
+          min="0" 
+          required
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="status" class="form-label">Registration Status *</label>
+        <select id="status" name="status" class="form-control" required>
+          <option value="Open" {% if not event or event.status == 'Open' %}selected{% endif %}>Open</option>
+          <option value="Closed" {% if event and event.status == 'Closed' %}selected{% endif %}>Closed</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- 8. Contact Details -->
+    <div class="form-row">
+      <div class="form-group">
+        <label for="contact_person" class="form-label">Contact Person / Faculty Coordinator</label>
+        <input 
+          type="text" 
+          id="contact_person" 
+          name="contact_person" 
+          class="form-control" 
+          value="{{ event.contact_person if event else '' }}" 
+          placeholder="e.g. Dr. K. Srinivas"
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="contact_email" class="form-label">Contact Email</label>
+        <input 
+          type="email" 
+          id="contact_email" 
+          name="contact_email" 
+          class="form-control" 
+          value="{{ event.contact_email if event else '' }}" 
+          placeholder="e.g. event@stuhub.edu"
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="contact_phone" class="form-label">Contact Phone</label>
+        <input 
+          type="tel" 
+          id="contact_phone" 
+          name="contact_phone" 
+          class="form-control" 
+          value="{{ event.contact_phone if event else '' }}" 
+          placeholder="e.g. 9876543210"
+        >
+      </div>
+    </div>
+
+    <!-- 9. Poster Upload -->
+    <div class="form-group">
+      <label class="form-label">Upload Event Banner / Poster (Recommended 16:9 ratio)</label>
+      <div class="file-upload-box" onclick="document.getElementById('eventPosterInput').click()" style="cursor: pointer; border: 2px dashed var(--border-color); border-radius: 0.75rem; padding: 1.5rem; text-align: center; background: var(--bg-card); transition: all 0.2s;">
+        <span style="font-size: 2.2rem; display: block; margin-bottom: 0.25rem;">🖼️</span>
+        <strong style="color: var(--text-main); font-size: 0.95rem;">Click to browse or upload event poster</strong>
+        <p style="font-size: 0.82rem; color: var(--text-muted); margin-top: 0.25rem;">
+          Supports JPG, PNG, WEBP (Max 16MB). Replaces default placeholder with your custom event graphic.
+        </p>
+        <input 
+          type="file" 
+          id="eventPosterInput" 
+          name="poster" 
+          accept="image/*" 
+          style="display: none;" 
+          onchange="previewEventPoster(this)"
+        >
+      </div>
+
+      <!-- Live Poster Preview Box -->
+      <div id="eventPosterPreviewContainer" style="margin-top: 1rem; {% if not (event and event.poster) %}display: none;{% endif %}">
+        <span style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; display: block; margin-bottom: 0.4rem;">
+          Poster Preview:
+        </span>
+        <div style="position: relative; display: inline-block; max-width: 100%;">
+          <img 
+            id="eventPosterPreview" 
+            src="{% if event and event.poster %}{{ event.poster|event_poster_url }}{% endif %}" 
+            alt="Poster Preview"
+            style="max-width: 100%; max-height: 220px; border-radius: 0.5rem; border: 2px solid var(--border-color); object-fit: cover; display: block;"
+          >
+          <button type="button" class="btn btn-secondary btn-sm" onclick="clearEventPosterPreview()" style="margin-top: 0.5rem;">
+            ✕ Reset / Clear
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+      <button type="submit" class="btn btn-primary btn-lg" style="flex: 1;">
+        {% if event %}Save Changes &rarr;{% else %}Publish Event &amp; Broadcast Alert &rarr;{% endif %}
+      </button>
+      <a href="{{ url_for('admin') }}#manage-events" class="btn btn-secondary btn-lg">
+        Cancel
+      </a>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Dynamic subcategory population
+  const eventCategories = {
+    'Technical': [
+      'Hackathons', 'Coding Competitions', 'Technical Quiz',
+      'Workshops', 'Project Expo', 'Paper Presentation',
+      'Tech Fest', 'Seminars'
+    ],
+    'Non-Technical': [
+      'Dancing', 'Singing', 'Debate', 'Photography',
+      'Drawing & Painting', 'Cultural Events', 'Sports',
+      'College Fest', 'Quiz', 'Student Activities'
+    ]
+  };
+
+  const mainCatSelect = document.getElementById('adminMainCategory');
+  const subCatSelect = document.getElementById('adminSubCategory');
+  const initialSubCat = "{{ event.sub_category if event else '' }}";
+
+  function updateSubCategories() {
+    const selectedMain = mainCatSelect.value;
+    subCatSelect.innerHTML = '<option value="">Select Sub-Category</option>';
+
+    if (selectedMain && eventCategories[selectedMain]) {
+      eventCategories[selectedMain].forEach(sub => {
+        const opt = document.createElement('option');
+        opt.value = sub;
+        opt.textContent = sub;
+        if (sub === initialSubCat) {
+          opt.selected = true;
+        }
+        subCatSelect.appendChild(opt);
+      });
+    }
+  }
+
+  if (mainCatSelect) {
+    mainCatSelect.addEventListener('change', updateSubCategories);
+    if (mainCatSelect.value) {
+      updateSubCategories();
+    }
+  }
+
+  function previewEventPoster(input) {
+    const container = document.getElementById('eventPosterPreviewContainer');
+    const preview = document.getElementById('eventPosterPreview');
+    if (input.files && input.files[0]) {
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        if (preview) preview.src = e.target.result;
+        if (container) container.style.display = 'block';
+      };
+      reader.readAsDataURL(input.files[0]);
+    }
+  }
+
+  function clearEventPosterPreview() {
+    const input = document.getElementById('eventPosterInput');
+    const container = document.getElementById('eventPosterPreviewContainer');
+    const preview = document.getElementById('eventPosterPreview');
+    if (input) input.value = '';
+    {% if event and event.poster %}
+      if (preview) preview.src = "{{ event.poster|event_poster_url }}";
+    {% else %}
+      if (preview) preview.src = '';
+      if (container) container.style.display = 'none';
+    {% endif %}
+  }
+</script>
+{% endblock %}

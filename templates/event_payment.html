@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}StuHub – Demo Payment Gateway{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper" style="max-width: 540px;">
+  <div class="auth-card" style="border-top: 5px solid var(--primary);">
+    <!-- Demo Banner Notice -->
+    <div class="demo-gateway-banner">
+      <span style="font-size: 1.25rem;">🔒</span>
+      <div>
+        <strong>DEMO PAYMENT GATEWAY</strong>
+        <p style="font-size: 0.78rem; margin: 0; opacity: 0.9;">
+          Evaluation Simulation Mode &ndash; No actual money will be charged.
+        </p>
+      </div>
+    </div>
+
+    <div class="auth-header" style="margin-top: 1.25rem; margin-bottom: 1.25rem; text-align: left;">
+      <h2 style="font-size: 1.5rem;">Event Fee Payment</h2>
+      <p>Confirm registration for <strong>{{ event.title }}</strong></p>
+    </div>
+
+    <!-- Order / Payment Summary Box -->
+    <div class="payment-order-summary">
+      <div class="order-summary-row">
+        <span>Student Name:</span>
+        <strong>{{ reg.student_name }}</strong>
+      </div>
+      <div class="order-summary-row">
+        <span>Roll Number:</span>
+        <strong>{{ reg.roll_number }}</strong>
+      </div>
+      <div class="order-summary-row">
+        <span>Branch &amp; Year:</span>
+        <span>{{ reg.branch }} ({{ reg.year }})</span>
+      </div>
+      <hr style="border: 0; border-top: 1px dashed var(--border-color); margin: 0.75rem 0;">
+      <div class="order-summary-row" style="font-size: 1.15rem; color: var(--primary);">
+        <strong>Total Amount Payable:</strong>
+        <strong style="font-size: 1.4rem;">₹{{ event.fee }}</strong>
+      </div>
+    </div>
+
+    <form method="POST" action="{{ url_for('event_payment', event_id=event.id) }}">
+      <!-- Simulated Payment Method Options -->
+      <div class="form-group" style="margin-top: 1.25rem;">
+        <label class="form-label">Select Demo Payment Method</label>
+        
+        <div class="demo-payment-options">
+          <label class="demo-payment-method-item">
+            <input type="radio" name="payment_method" value="UPI / QR Code" checked>
+            <span>📱 UPI / PhonePe / GPay (Instant Simulation)</span>
+          </label>
+
+          <label class="demo-payment-method-item">
+            <input type="radio" name="payment_method" value="Credit / Debit Card">
+            <span>💳 Card Payment (Test Card: 4242 4242 4242)</span>
+          </label>
+
+          <label class="demo-payment-method-item">
+            <input type="radio" name="payment_method" value="Campus Student Wallet">
+            <span>🎓 Student Campus Wallet</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="alert alert-info" style="font-size: 0.82rem; margin-top: 1rem; margin-bottom: 1.25rem;">
+        <span>ℹ️ Clicking the button below simulates a successful transaction and issues your official event registration pass.</span>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block btn-lg">
+        Pay ₹{{ event.fee }} &rarr;
+      </button>
+
+      <div style="text-align: center; margin-top: 1rem;">
+        <a href="{{ url_for('event_register', event_id=event.id) }}" style="font-size: 0.88rem; color: var(--text-muted);">
+          &larr; Cancel and edit details
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

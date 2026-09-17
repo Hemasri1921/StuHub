@@ -1,0 +1,332 @@
+{% extends "base.html" %}
+
+{% block title %}STUHUB Admin – Registrations for {{ event.title }}{% endblock %}
+
+{% block content %}
+<div class="section-header" style="margin-bottom: 1.5rem;">
+  <div>
+    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem;">
+      <a href="{{ url_for('admin_events_portal') }}" style="color: var(--primary); font-size: 0.88rem; font-weight: 700; text-decoration: none;">
+        &larr; Back to Events Portal
+      </a>
+      <span style="color: var(--text-muted);">&bull;</span>
+      <span style="font-size: 0.85rem; color: var(--text-muted);">Event Attendee Directory</span>
+    </div>
+    <h2 style="font-size: 1.85rem; font-weight: 850; color: var(--text-main); margin: 0 0 0.35rem 0;">
+      <span>👥</span> Registered Students: {{ event.title }}
+    </h2>
+    <p style="color: var(--text-muted); font-size: 0.92rem; margin: 0;">
+      {{ event.main_category }} &bull; {{ event.sub_category }} | 📅 {{ event.event_date }} at {{ event.venue }}
+    </p>
+  </div>
+  <div style="display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap;">
+    <button onclick="exportRegistrationsCSV()" class="btn btn-secondary btn-sm" title="Download Attendee Sheet as CSV">
+      📥 Export CSV
+    </button>
+    <a href="{{ url_for('admin_events_portal') }}" class="btn btn-secondary btn-sm">
+      &larr; Events Portal
+    </a>
+    <a href="{{ url_for('admin_add_event') }}" class="btn btn-primary btn-sm" style="font-weight: 700;">
+      + Post New Event
+    </a>
+  </div>
+</div>
+
+<!-- Total Registered & Capacity Statistics -->
+<div class="stats-row" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 1.75rem;">
+  <div class="stat-box">
+    <div class="stat-icon blue">🎓</div>
+    <div class="stat-data">
+      <h4 id="statTotalDisplay">{{ total_registered }}</h4>
+      <span>Total Students Registered</span>
+    </div>
+  </div>
+
+  <div class="stat-box">
+    <div class="stat-icon green">💺</div>
+    <div class="stat-data">
+      <h4>{{ event.total_seats - total_registered if event.total_seats > total_registered else 0 }}</h4>
+      <span>Remaining Seats (of {{ event.total_seats }})</span>
+    </div>
+  </div>
+
+  <div class="stat-box">
+    <div class="stat-icon amber">💰</div>
+    <div class="stat-data">
+      <h4>{% if event.fee == 0 %}FREE{% else %}₹{{ event.fee }}{% endif %}</h4>
+      <span>Registration Fee</span>
+    </div>
+  </div>
+
+  <div class="stat-box">
+    <div class="stat-icon purple">🎟️</div>
+    <div class="stat-data">
+      <h4 id="statFilteredDisplay">{{ total_registered }}</h4>
+      <span>Matching Filter Count</span>
+    </div>
+  </div>
+</div>
+
+<!-- ==============================================================================
+     SEARCH & FILTER CONTROL BAR
+     ============================================================================== -->
+<div style="background: #ffffff; border: 1px solid var(--border-color); border-radius: 12px; padding: 1.25rem 1.5rem; margin-bottom: 1.75rem; box-shadow: var(--shadow-sm);">
+  <div style="display: grid; grid-template-columns: 2fr 1.5fr 1fr 1fr; gap: 1rem; align-items: end;">
+    <!-- 1. Text Search: Name, Roll Number, Branch, Email -->
+    <div>
+      <label for="studentSearchInput" style="font-size: 0.78rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 0.35rem;">
+        🔍 Search by Student / Roll / Branch / Email
+      </label>
+      <input 
+        type="text" 
+        id="studentSearchInput" 
+        placeholder="Type student name, roll number, or department..." 
+        class="form-control"
+        style="padding: 0.6rem 0.85rem; font-size: 0.9rem;"
+        oninput="filterRegistrationsTable()"
+      >
+    </div>
+
+    <!-- 2. Search / Filter by Event -->
+    <div>
+      <label for="eventFilterSelect" style="font-size: 0.78rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 0.35rem;">
+        🎓 Filter by Event
+      </label>
+      <select 
+        id="eventFilterSelect" 
+        class="form-control" 
+        style="padding: 0.6rem 0.85rem; font-size: 0.9rem;"
+        onchange="location = this.value;"
+      >
+        <option value="{{ url_for('admin_event_registrations', event_id=0) }}" {% if event.id == 0 %}selected{% endif %}>
+          All Events (Consolidated)
+        </option>
+        {% for ev_item in all_events_list %}
+          <option value="{{ url_for('admin_event_registrations', event_id=ev_item.id) }}" {% if event.id == ev_item.id %}selected{% endif %}>
+            {{ ev_item.title }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <!-- 3. Filter by Payment Status -->
+    <div>
+      <label for="paymentFilterSelect" style="font-size: 0.78rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 0.35rem;">
+        💳 Payment Status
+      </label>
+      <select 
+        id="paymentFilterSelect" 
+        class="form-control" 
+        style="padding: 0.6rem 0.85rem; font-size: 0.9rem;"
+        onchange="filterRegistrationsTable()"
+      >
+        <option value="ALL">All Payments</option>
+        <option value="FREE">Free</option>
+        <option value="PAID">Paid</option>
+      </select>
+    </div>
+
+    <!-- 4. Filter by Registration Status -->
+    <div>
+      <label for="regStatusFilterSelect" style="font-size: 0.78rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 0.35rem;">
+        ✅ Registration Status
+      </label>
+      <select 
+        id="regStatusFilterSelect" 
+        class="form-control" 
+        style="padding: 0.6rem 0.85rem; font-size: 0.9rem;"
+        onchange="filterRegistrationsTable()"
+      >
+        <option value="ALL">All Status</option>
+        <option value="CONFIRMED">Confirmed</option>
+        <option value="CANCELLED">Cancelled</option>
+      </select>
+    </div>
+  </div>
+</div>
+
+<!-- ==============================================================================
+     STUDENT REGISTRATIONS TABLE
+     ============================================================================== -->
+<div class="admin-table-wrapper">
+  {% if registrations and registrations|length > 0 %}
+    <table class="admin-table" id="registrationsTable">
+      <thead>
+        <tr>
+          <th>Reg ID</th>
+          <th>Student Name</th>
+          <th>Roll Number</th>
+          <th>Branch</th>
+          <th>Year</th>
+          <th>College Email</th>
+          <th>Phone Number</th>
+          <th>Event Name</th>
+          <th>Payment Status</th>
+          <th>Reg Status</th>
+          <th>Registered Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in registrations %}
+          <tr class="reg-row" 
+              data-name="{{ r.student_name|lower }}" 
+              data-roll="{{ r.roll_number|lower }}" 
+              data-branch="{{ r.branch|lower }}" 
+              data-email="{{ r.email|lower }}"
+              data-event="{{ r.event_title|lower }}"
+              data-payment="{{ r.payment_status|lower }}"
+              data-status="{{ r.registration_status|lower }}"
+          >
+            <td>
+              <code style="font-weight: 750; color: var(--primary); background: #eff6ff; padding: 0.2rem 0.5rem; border-radius: 4px; border: 1px solid #bfdbfe;">
+                {{ r.registration_id }}
+              </code>
+            </td>
+            <td>
+              <strong style="color: var(--text-main); font-size: 0.95rem;">{{ r.student_name }}</strong>
+            </td>
+            <td>
+              <span style="font-family: monospace; font-weight: 700; color: #334155;">{{ r.roll_number }}</span>
+            </td>
+            <td>
+              <span class="badge" style="background: #f1f5f9; color: #1e293b; font-weight: 600;">{{ r.branch }}</span>
+            </td>
+            <td>{{ r.year }}</td>
+            <td>
+              <a href="mailto:{{ r.email }}" style="font-size: 0.86rem; font-weight: 600;">{{ r.email }}</a>
+            </td>
+            <td style="font-size: 0.86rem; color: #475569;">
+              <a href="tel:{{ r.phone }}" style="color: inherit; text-decoration: none;">📞 {{ r.phone }}</a>
+            </td>
+            <td>
+              <strong style="font-size: 0.88rem; color: #0f172a;">{{ r.event_title }}</strong>
+            </td>
+            <td>
+              {% if 'free' in r.payment_status|lower %}
+                <span class="badge" style="background: #ecfdf5; color: #047857; font-weight: 700;">Free</span>
+              {% else %}
+                <span class="badge" style="background: #eff6ff; color: #1d4ed8; font-weight: 700;">{{ r.payment_status }}</span>
+              {% endif %}
+            </td>
+            <td>
+              <span class="badge" style="background: #ecfdf5; color: #047857; font-weight: 700;">
+                {{ r.registration_status }}
+              </span>
+            </td>
+            <td style="font-size: 0.82rem; color: var(--text-muted); white-space: nowrap;">
+              {{ r.created_at|datetime_format }}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    
+    <div id="noMatchingResults" style="display: none; padding: 3rem; text-align: center; color: var(--text-muted);">
+      <div style="font-size: 2rem; margin-bottom: 0.5rem;">🔍</div>
+      <h4>No Matching Students Found</h4>
+      <p>Try adjusting your search keywords or payment/registration filters.</p>
+    </div>
+  {% else %}
+    <div style="padding: 3.5rem; text-align: center; color: var(--text-muted);">
+      <div style="font-size: 3rem; margin-bottom: 0.6rem;">👥</div>
+      <h3 style="font-weight: 800; color: var(--text-main); margin-bottom: 0.35rem;">No Registrations Recorded</h3>
+      <p style="margin-bottom: 1rem;">No students have registered for this event yet.</p>
+      <a href="{{ url_for('admin_events_portal') }}" class="btn btn-secondary btn-sm">
+        &larr; Return to Events Portal
+      </a>
+    </div>
+  {% endif %}
+</div>
+
+<!-- Instant Client-Side Search & Filter Script -->
+<script>
+function filterRegistrationsTable() {
+  const query = (document.getElementById('studentSearchInput').value || '').trim().toLowerCase();
+  const paymentFilter = (document.getElementById('paymentFilterSelect').value || 'ALL').toUpperCase();
+  const regStatusFilter = (document.getElementById('regStatusFilterSelect').value || 'ALL').toUpperCase();
+
+  const rows = document.querySelectorAll('.reg-row');
+  let visibleCount = 0;
+
+  rows.forEach(row => {
+    const name = row.getAttribute('data-name') || '';
+    const roll = row.getAttribute('data-roll') || '';
+    const branch = row.getAttribute('data-branch') || '';
+    const email = row.getAttribute('data-email') || '';
+    const eventName = row.getAttribute('data-event') || '';
+    const payment = row.getAttribute('data-payment') || '';
+    const status = row.getAttribute('data-status') || '';
+
+    // Check text search matching name, roll, branch, email, or event
+    const matchesQuery = !query || 
+      name.includes(query) || 
+      roll.includes(query) || 
+      branch.includes(query) || 
+      email.includes(query) || 
+      eventName.includes(query);
+
+    // Check payment filter
+    let matchesPayment = true;
+    if (paymentFilter === 'FREE') {
+      matchesPayment = payment.includes('free');
+    } else if (paymentFilter === 'PAID') {
+      matchesPayment = payment.includes('paid') || payment.includes('₹');
+    }
+
+    // Check reg status filter
+    let matchesStatus = true;
+    if (regStatusFilter === 'CONFIRMED') {
+      matchesStatus = status.includes('confirmed');
+    } else if (regStatusFilter === 'CANCELLED') {
+      matchesStatus = status.includes('cancelled');
+    }
+
+    if (matchesQuery && matchesPayment && matchesStatus) {
+      row.style.display = '';
+      visibleCount++;
+    } else {
+      row.style.display = 'none';
+    }
+  });
+
+  const noResultsBox = document.getElementById('noMatchingResults');
+  if (noResultsBox) {
+    noResultsBox.style.display = (visibleCount === 0 && rows.length > 0) ? 'block' : 'none';
+  }
+
+  const statFilteredDisplay = document.getElementById('statFilteredDisplay');
+  if (statFilteredDisplay) {
+    statFilteredDisplay.textContent = visibleCount;
+  }
+}
+
+// Export Table to CSV
+function exportRegistrationsCSV() {
+  const table = document.getElementById('registrationsTable');
+  if (!table) return;
+
+  const rows = table.querySelectorAll('tr');
+  let csv = [];
+
+  for (let i = 0; i < rows.length; i++) {
+    if (rows[i].style.display === 'none') continue;
+    const cols = rows[i].querySelectorAll('td, th');
+    let rowData = [];
+    for (let j = 0; j < cols.length; j++) {
+      let text = cols[j].innerText.replace(/(\r\n|\n|\r)/gm, ' ').replace(/"/g, '""').trim();
+      rowData.push('"' + text + '"');
+    }
+    csv.push(rowData.join(','));
+  }
+
+  const csvFile = new Blob([csv.join('\n')], { type: 'text/csv' });
+  const downloadLink = document.createElement('a');
+  downloadLink.download = 'stuhub_event_registrations.csv';
+  downloadLink.href = window.URL.createObjectURL(csvFile);
+  downloadLink.style.display = 'none';
+  document.body.appendChild(downloadLink);
+  downloadLink.click();
+  document.body.removeChild(downloadLink);
+}
+</script>
+{% endblock %}
