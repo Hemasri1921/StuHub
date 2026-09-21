@@ -1,6 +1,10 @@
 # 🎓 StuHub – Student Support Portal
 
 > **"Helping Students, Simplifying Campus Life"**
+> ## 🌐 Live Demo
+
+https://stuhub-rnag.onrender.com
+
 
 StuHub is an all-in-one, modern campus support web platform engineered with **Python (Flask)**, **SQLite**, **HTML5**, **CSS3**, and **Vanilla JavaScript**. It brings together **Campus Events**, **Facility Complaints**, **Lost & Found Items**, **Official Announcements**, **In-App Notifications**, and a **Minimal 2 × 2 Admin Management Portal** into a single, responsive platform tailored for college students and campus administrators.
 
